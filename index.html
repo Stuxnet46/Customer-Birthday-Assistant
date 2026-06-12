@@ -1,0 +1,3450 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Customer Birthday Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green-primary: #00AA5B;
+  --green-deep: #006B38;
+  --green-glow: #00D46E;
+  --green-mist: #E8F5EE;
+  --forest-dark: #0D1F17;
+  --surface-light: #FFFFFF;
+  --surface-dark: #142B1E;
+  --card-dark: #1A3526;
+  --text-primary-light: #0D1F17;
+  --text-primary-dark: #F0FAF4;
+  --text-muted-light: #6B8F7A;
+  --text-muted-dark: #7AAE90;
+  --danger: #FF4757;
+  --gold: #FFD700;
+  --blue: #3B82F6;
+  --nav-height: 72px;
+  --header-height: 60px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --shadow-light: 0 4px 20px rgba(0,170,91,0.12);
+  --shadow-dark: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #F5F5F5;
+  color: var(--text-primary-light);
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  transition: background 0.3s, color 0.3s;
+  overflow-x: hidden;
+}
+
+body.dark {
+  background: #0A1A10;
+  color: var(--text-primary-dark);
+}
+
+/* ── APP SHELL ── */
+#app {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100dvh;
+  position: relative;
+  background: var(--green-mist);
+  overflow: hidden;
+  transition: background 0.3s;
+}
+body.dark #app { background: var(--forest-dark); }
+
+/* ── SCREENS ── */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+.screen.active {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ══════════════════════════════════
+   PIN SCREEN — TRUE SAKU STYLE
+══════════════════════════════════ */
+#pin-screen {
+  background: #00140A;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  padding: 0;
+  min-height: 100dvh;
+  overflow: hidden;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+}
+
+/* Top green half */
+.pin-top {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: calc(env(safe-area-inset-top,0px) + 32px) 24px 44px;
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(160deg, #007A3D 0%, #00AA5B 55%, #00C46A 100%);
+  overflow: hidden;
+  width: 100%;
+}
+.pin-top::before {
+  content:'';
+  position:absolute;
+  width:260px; height:260px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.06);
+  top:-80px; right:-60px;
+  pointer-events:none;
+}
+.pin-top::after {
+  content:'';
+  position:absolute;
+  width:180px; height:180px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.05);
+  top:20px; right:40px;
+  pointer-events:none;
+}
+
+/* Logo — glass card style like Saku lock */
+.pin-logo {
+  width: clamp(68px, 18vw, 80px);
+  height: clamp(68px, 18vw, 80px);
+  border-radius: 22px;
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.35);
+  animation: logoPulse 4s ease-in-out infinite;
+}
+@keyframes logoPulse {
+  0%,100%{ box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.35); }
+  50%{ box-shadow: 0 6px 32px rgba(0,0,0,0.2), 0 0 40px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.4); }
+}
+.pin-logo svg { width: 38px; height: 38px; position:relative; z-index:1; }
+
+.pin-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(22px, 6vw, 26px);
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  position: relative; z-index:1;
+}
+.pin-subtitle {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  font-family: 'Inter', sans-serif;
+  margin-top: -10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 600;
+  position: relative; z-index:1;
+}
+
+/* Bottom white half */
+.pin-keypad {
+  background: #F5F5F5;
+  border-radius: 0;
+  padding: 28px 20px calc(env(safe-area-inset-bottom,0px) + 12px);
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  flex-shrink: 0;
+}
+/* Visual rounded top — purely decorative, no real radius so no black gaps */
+.pin-keypad::before {
+  content: '';
+  position: absolute;
+  top: -18px; left: 0; right: 0;
+  height: 20px;
+  background: #F5F5F5;
+  border-radius: 28px 28px 0 0;
+  z-index: 2;
+}
+
+/* PIN label + dots inside white section */
+.pin-label {
+  font-size: 16px;
+  color: #1A1A1A;
+  font-family: 'Poppins';
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 16px;
+  letter-spacing: -0.2px;
+}
+
+/* 6 dots — on white bg */
+.pin-dots {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.pin-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 2px solid #CCCCCC;
+  background: transparent;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.pin-dot.filled {
+  background: #00AA5B;
+  border-color: #00AA5B;
+  box-shadow: 0 0 8px rgba(0,170,91,0.5);
+  transform: scale(1.2);
+}
+.pin-dot.error {
+  border-color: #FF4757;
+  background: #FF4757;
+  box-shadow: 0 0 8px rgba(255,71,87,0.5);
+}
+
+.pin-error-text {
+  font-size: 12px;
+  color: #FF4757;
+  min-height: 18px;
+  text-align: center;
+  font-family: 'Inter';
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+/* Keypad grid — Saku white card buttons */
+.keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+.key-btn {
+  border: none;
+  border-radius: 16px;
+  background: #FFFFFF;
+  color: #1A1A1A;
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(22px, 6vw, 26px);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.12s, transform 0.1s;
+  height: clamp(62px, 17vw, 74px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  letter-spacing: -0.5px;
+  gap: 1px;
+}
+.key-btn:active {
+  background: #E8F5EE;
+  transform: scale(0.95);
+}
+.key-btn .key-sub {
+  font-size: 8px;
+  letter-spacing: 1.8px;
+  color: #AAAAAA;
+  font-family: 'Inter';
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.key-btn.key-del {
+  background: #FFFFFF;
+  color: #666;
+}
+.key-btn.key-del:active { background: #FFE8EA; color: #FF4757; }
+.key-btn.key-ok {
+  background: #00AA5B;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0,170,91,0.35);
+}
+.key-btn.key-ok:active { background: #007A3D; transform: scale(0.95); }
+
+.key-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(0,170,91,0.15);
+  width: 0; height: 0;
+  animation: ripple 0.45s ease-out forwards;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+@keyframes ripple {
+  to { width: 200px; height: 200px; opacity: 0; }
+}
+
+.shake { animation: shake 0.4s cubic-bezier(0.36,0.07,0.19,0.97); }
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  15%{transform:translateX(-9px)}
+  30%{transform:translateX(9px)}
+  45%{transform:translateX(-6px)}
+  60%{transform:translateX(6px)}
+  75%{transform:translateX(-3px)}
+  90%{transform:translateX(3px)}
+}
+
+/* ── MAIN SCREENS ── */
+.main-screen {
+  display: none;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+.main-screen.active { display: flex; }
+
+/* ── HEADER ── */
+.app-header {
+  background: linear-gradient(135deg, var(--green-deep), var(--green-primary));
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 0;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,107,56,0.3);
+}
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--header-height);
+}
+.header-left {
+  display: flex; align-items: center; gap: 10px;
+}
+.header-icon-wrap {
+  width: 38px; height: 38px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.header-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 17px; font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+.header-sub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.65);
+  font-family: 'Inter';
+  margin-top: 2px;
+}
+.header-actions { display: flex; gap: 8px; }
+.hdr-btn {
+  width: 38px; height: 38px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #fff;
+  transition: background 0.2s, transform 0.15s;
+}
+.hdr-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.22); }
+
+/* Ticker */
+.ticker-wrap {
+  overflow: hidden;
+  padding: 8px 0 10px;
+  position: relative;
+}
+.ticker-track {
+  display: flex;
+  gap: 0;
+  animation: ticker 22s linear infinite;
+  white-space: nowrap;
+}
+.ticker-track:hover { animation-play-state: paused; }
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 20px;
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.8);
+  font-family: 'Inter';
+}
+.ticker-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  flex-shrink: 0;
+}
+.ticker-badge {
+  background: rgba(255,255,255,0.18);
+  border-radius: 99px;
+  padding: 2px 8px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* ── SCROLL AREA ── */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 16px);
+}
+.scroll-area::-webkit-scrollbar { display: none; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
+  background: var(--surface-light);
+  border-top: 1px solid rgba(0,170,91,0.1);
+  display: flex;
+  align-items: flex-start;
+  padding-top: 8px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 200;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  transition: background 0.3s;
+}
+body.dark .bottom-nav {
+  background: var(--surface-dark);
+  border-top-color: rgba(255,255,255,0.06);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+}
+.nav-item {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 4px;
+  cursor: pointer;
+  padding: 4px 0;
+  position: relative;
+  transition: all 0.2s;
+}
+.nav-icon-wrap {
+  width: 44px; height: 30px;
+  border-radius: 15px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.nav-item.active .nav-icon-wrap {
+  background: var(--green-mist);
+  width: 48px;
+}
+body.dark .nav-item.active .nav-icon-wrap { background: rgba(0,170,91,0.18); }
+.nav-item svg { transition: all 0.25s; }
+.nav-item.active svg { color: var(--green-primary); transform: scale(1.1); }
+.nav-item:not(.active) svg { color: var(--text-muted-light); }
+body.dark .nav-item:not(.active) svg { color: var(--text-muted-dark); }
+.nav-label {
+  font-size: 10.5px; font-weight: 500;
+  font-family: 'Inter';
+  color: var(--text-muted-light);
+  transition: color 0.2s;
+}
+body.dark .nav-label { color: var(--text-muted-dark); }
+.nav-item.active .nav-label { color: var(--green-primary); font-weight: 600; }
+
+/* ── SECTIONS ── */
+.section { padding: 16px 16px 0; }
+.section-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px; font-weight: 700;
+  color: var(--text-primary-light);
+  margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+body.dark .section-title { color: var(--text-primary-dark); }
+.section-more {
+  font-size: 12px; font-weight: 500;
+  color: var(--green-primary);
+  cursor: pointer;
+  font-family: 'Inter';
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface-light);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-light);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+body.dark .card {
+  background: var(--card-dark);
+  box-shadow: var(--shadow-dark);
+}
+
+/* ── STAT ROW ── */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 10px;
+  margin: 0 16px 16px;
+}
+.stat-card {
+  background: var(--surface-light);
+  border-radius: var(--radius-sm);
+  padding: 12px 10px;
+  text-align: center;
+  box-shadow: var(--shadow-light);
+  transition: background 0.3s;
+}
+body.dark .stat-card { background: var(--card-dark); }
+.stat-num {
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(20px,5vw,26px);
+  font-weight: 800;
+  color: var(--green-primary);
+  line-height: 1;
+}
+.stat-lbl {
+  font-size: 10px;
+  color: var(--text-muted-light);
+  margin-top: 4px;
+  font-family: 'Inter';
+  font-weight: 500;
+}
+body.dark .stat-lbl { color: var(--text-muted-dark); }
+
+/* ── HERO BIRTHDAY CARD ── */
+.hero-birthday {
+  margin: 16px 16px 0;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--green-deep) 0%, #005A30 50%, var(--green-primary) 100%);
+  padding: 24px 20px;
+  position: relative;
+  overflow: hidden;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  box-shadow: 0 8px 32px rgba(0,107,56,0.4);
+}
+.hero-bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  pointer-events: none;
+}
+.hero-bg-circle.c1 { width: 200px; height: 200px; top: -60px; right: -40px; }
+.hero-bg-circle.c2 { width: 130px; height: 130px; top: 30px; right: 60px; }
+.hero-bg-circle.c3 { width: 80px; height: 80px; bottom: 20px; left: -20px; }
+
+.hero-tag {
+  position: absolute; top: 16px; left: 16px;
+  background: rgba(255,215,0,0.2);
+  border: 1px solid rgba(255,215,0,0.35);
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 11px; font-weight: 600;
+  color: var(--gold);
+  font-family: 'Inter';
+  display: flex; align-items: center; gap: 5px;
+}
+.hero-count-badge {
+  position: absolute; top: 16px; right: 16px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.9);
+  font-family: 'Inter'; font-weight: 500;
+}
+.hero-name {
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(22px,6vw,28px);
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 6px;
+  animation: fadeSlideUp 0.5s ease both;
+}
+.hero-meta {
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+  font-family: 'Inter';
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 4px;
+  animation: fadeSlideUp 0.5s 0.1s ease both;
+}
+.hero-tagline {
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  font-family: 'Poppins'; font-style: italic;
+  animation: fadeSlideUp 0.5s 0.2s ease both;
+}
+@keyframes fadeSlideUp {
+  from { opacity:0; transform:translateY(12px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+/* Empty hero */
+.hero-empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; text-align: center;
+  padding: 16px;
+}
+.hero-empty-icon {
+  width: 64px; height: 64px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.hero-empty p { color: rgba(255,255,255,0.7); font-size: 14px; font-family:'Poppins'; font-weight:600; }
+.hero-empty span { color: rgba(255,255,255,0.45); font-size: 12px; }
+
+/* Mini birthday cards row */
+.mini-bday-row {
+  display: flex; gap: 10px;
+  overflow-x: auto; padding: 4px 2px 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.mini-bday-row::-webkit-scrollbar { display:none; }
+.mini-bday-card {
+  flex-shrink: 0;
+  background: var(--surface-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  min-width: 110px;
+  box-shadow: var(--shadow-light);
+  transition: background 0.3s;
+  cursor: pointer;
+}
+body.dark .mini-bday-card { background: var(--card-dark); }
+.mini-bday-name {
+  font-family: 'Poppins'; font-size: 12px; font-weight: 700;
+  color: var(--text-primary-light);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 90px;
+}
+body.dark .mini-bday-name { color: var(--text-primary-dark); }
+.mini-bday-gender {
+  font-size: 10px; color: var(--text-muted-light);
+  margin-top: 2px; font-family: 'Inter';
+}
+body.dark .mini-bday-gender { color: var(--text-muted-dark); }
+
+/* ── NASABAH LIST ── */
+.search-bar-wrap {
+  padding: 12px 16px;
+  position: sticky; top: calc(var(--header-height) + env(safe-area-inset-top, 0px) + 40px);
+  z-index: 50;
+  background: var(--green-mist);
+  transition: background 0.3s;
+}
+body.dark .search-bar-wrap { background: var(--forest-dark); }
+.search-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-light);
+  transition: background 0.3s, box-shadow 0.2s;
+}
+body.dark .search-bar {
+  background: var(--card-dark);
+  box-shadow: var(--shadow-dark);
+}
+.search-bar input {
+  flex:1; border:none; outline:none;
+  font-size:14px; font-family:'Inter';
+  background: transparent;
+  color: var(--text-primary-light);
+}
+body.dark .search-bar input { color: var(--text-primary-dark); }
+.search-bar input::placeholder { color: var(--text-muted-light); }
+body.dark .search-bar input::placeholder { color: var(--text-muted-dark); }
+.search-bar svg { color: var(--text-muted-light); flex-shrink:0; }
+body.dark .search-bar svg { color: var(--text-muted-dark); }
+
+.nasabah-list { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.nasabah-card {
+  background: var(--surface-light);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-light);
+  display: flex; align-items: flex-start; gap: 12px;
+  transition: background 0.3s, transform 0.2s;
+  animation: slideUp 0.3s ease both;
+  cursor: pointer;
+}
+body.dark .nasabah-card { background: var(--card-dark); box-shadow: var(--shadow-dark); }
+.nasabah-card:active { transform: scale(0.98); }
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(16px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.nasabah-avatar {
+  width: 46px; height: 46px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink:0;
+}
+.avatar-male { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+.avatar-female { background: linear-gradient(135deg, #EC4899, #BE185D); }
+.nasabah-info { flex:1; min-width:0; }
+.nasabah-name {
+  font-family:'Poppins'; font-size:14px; font-weight:700;
+  color: var(--text-primary-light);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+body.dark .nasabah-name { color: var(--text-primary-dark); }
+.nasabah-nik {
+  font-family:'JetBrains Mono'; font-size:11px;
+  color: var(--text-muted-light);
+  margin-top:2px;
+}
+body.dark .nasabah-nik { color: var(--text-muted-dark); }
+.nasabah-meta {
+  display:flex; align-items:center; gap:6px;
+  margin-top:6px; flex-wrap:wrap;
+}
+.nasabah-date {
+  font-size:11px; color: var(--text-muted-light);
+  font-family:'Inter';
+}
+body.dark .nasabah-date { color: var(--text-muted-dark); }
+.bday-badge {
+  font-size:10px; font-weight:600;
+  padding:2px 8px; border-radius:99px;
+  font-family:'Inter';
+}
+.badge-today { background:rgba(0,170,91,0.15); color:var(--green-primary); }
+.badge-week { background:rgba(59,130,246,0.13); color:var(--blue); }
+.badge-month { background:rgba(255,215,0,0.15); color:#B8860B; }
+body.dark .badge-month { color:var(--gold); }
+
+.nasabah-actions {
+  display:flex; gap:6px; align-items:center; flex-shrink:0;
+}
+.act-btn {
+  width:34px; height:34px;
+  border-radius:10px; border:none;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition: all 0.15s;
+}
+.act-btn:active { transform:scale(0.9); }
+.btn-edit { background:rgba(0,170,91,0.1); color:var(--green-primary); }
+.btn-del { background:rgba(255,71,87,0.1); color:var(--danger); }
+
+/* FAB */
+.fab {
+  position:fixed;
+  bottom:calc(var(--nav-height) + env(safe-area-inset-bottom,0px) + 16px);
+  right:calc(50% - 210px + 16px);
+  max-right:16px;
+  width:54px; height:54px;
+  background:linear-gradient(135deg, var(--green-primary), var(--green-glow));
+  border-radius:16px;
+  border:none;
+  display:none; align-items:center; justify-content:center;
+  box-shadow:0 6px 20px rgba(0,170,91,0.4);
+  cursor:pointer; color:#fff;
+  font-size:28px; font-weight:300;
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index:150;
+}
+.fab:active { transform:scale(0.92); box-shadow:0 3px 12px rgba(0,170,91,0.3); }
+.fab.visible { display:flex; }
+
+/* ── TOP 10 ── */
+.top10-list { padding: 0 16px; display:flex; flex-direction:column; gap:10px; }
+.top10-card {
+  background:var(--surface-light);
+  border-radius:var(--radius-md);
+  padding:14px 16px;
+  display:flex; align-items:center; gap:12px;
+  box-shadow:var(--shadow-light);
+  transition:background 0.3s;
+  animation: slideUp 0.3s ease both;
+}
+body.dark .top10-card { background:var(--card-dark); box-shadow:var(--shadow-dark); }
+.rank-badge {
+  width:32px; height:32px;
+  border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Poppins'; font-size:13px; font-weight:800;
+  flex-shrink:0;
+}
+.rank-1 { background:linear-gradient(135deg,#FFD700,#FFA500); color:#fff; }
+.rank-2 { background:linear-gradient(135deg,#C0C0C0,#A9A9A9); color:#fff; }
+.rank-3 { background:linear-gradient(135deg,#CD7F32,#A0522D); color:#fff; }
+.rank-other { background:rgba(0,170,91,0.1); color:var(--green-primary); }
+body.dark .rank-other { background:rgba(0,170,91,0.18); }
+.top10-info { flex:1; min-width:0; }
+.top10-name {
+  font-family:'Poppins'; font-size:13px; font-weight:700;
+  color:var(--text-primary-light);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+body.dark .top10-name { color:var(--text-primary-dark); }
+.top10-sub {
+  font-size:11px; color:var(--text-muted-light);
+  margin-top:2px; font-family:'Inter';
+}
+body.dark .top10-sub { color:var(--text-muted-dark); }
+.countdown-wrap { text-align:right; flex-shrink:0; }
+.countdown-num {
+  font-family:'JetBrains Mono'; font-size:20px; font-weight:700;
+  color:var(--green-primary); line-height:1;
+}
+.countdown-num.today { color:var(--gold); }
+.countdown-unit {
+  font-size:10px; color:var(--text-muted-light);
+  font-family:'Inter';
+}
+body.dark .countdown-unit { color:var(--text-muted-dark); }
+
+/* ── PENGATURAN ── */
+.settings-list { padding:0 16px; display:flex; flex-direction:column; gap:10px; }
+.settings-card {
+  background:var(--surface-light);
+  border-radius:var(--radius-md);
+  overflow:hidden;
+  box-shadow:var(--shadow-light);
+  transition:background 0.3s;
+}
+body.dark .settings-card { background:var(--card-dark); box-shadow:var(--shadow-dark); }
+.settings-label {
+  padding:8px 16px 4px;
+  font-size:11px; font-weight:600;
+  color:var(--text-muted-light);
+  text-transform:uppercase; letter-spacing:0.8px;
+  font-family:'Inter';
+}
+body.dark .settings-label { color:var(--text-muted-dark); }
+.setting-row {
+  display:flex; align-items:center; gap:12px;
+  padding:14px 16px;
+  cursor:pointer;
+  transition:background 0.15s;
+  border-top:1px solid rgba(0,0,0,0.04);
+}
+body.dark .setting-row { border-top-color:rgba(255,255,255,0.04); }
+.setting-row:first-of-type { border-top:none; }
+.setting-row:active { background:rgba(0,0,0,0.03); }
+body.dark .setting-row:active { background:rgba(255,255,255,0.04); }
+.setting-icon {
+  width:38px; height:38px;
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.si-green { background:rgba(0,170,91,0.12); color:var(--green-primary); }
+.si-blue { background:rgba(59,130,246,0.12); color:var(--blue); }
+.si-gold { background:rgba(255,215,0,0.15); color:#B8860B; }
+body.dark .si-gold { color:var(--gold); }
+.si-red { background:rgba(255,71,87,0.1); color:var(--danger); }
+.setting-text { flex:1; }
+.setting-title { font-size:14px; font-weight:600; font-family:'Inter'; color:var(--text-primary-light); }
+body.dark .setting-title { color:var(--text-primary-dark); }
+.setting-desc { font-size:11px; color:var(--text-muted-light); margin-top:1px; font-family:'Inter'; }
+body.dark .setting-desc { color:var(--text-muted-dark); }
+.setting-right { display:flex; align-items:center; }
+.setting-arrow { color:var(--text-muted-light); }
+body.dark .setting-arrow { color:var(--text-muted-dark); }
+
+/* Toggle — animated sun/moon */
+.toggle {
+  width:56px; height:28px;
+  background: rgba(0,0,0,0.15);
+  border: 1.5px solid rgba(0,0,0,0.1);
+  border-radius: 99px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.4s cubic-bezier(0.4,0,0.2,1), border-color 0.4s;
+  flex-shrink:0;
+}
+.toggle.on {
+  background: linear-gradient(135deg, #006B38, #00AA5B);
+  border-color: rgba(0,212,110,0.3);
+  box-shadow: 0 0 12px rgba(0,170,91,0.3);
+}
+.toggle-thumb {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 20px; height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+.toggle.on .toggle-thumb {
+  transform: translateX(28px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 6px rgba(0,212,110,0.2);
+}
+.toggle-thumb-icon {
+  font-size: 11px;
+  line-height: 1;
+  transition: opacity 0.2s, transform 0.3s;
+  position:absolute;
+}
+.toggle-thumb-sun { opacity:1; transform:rotate(0deg); }
+.toggle.on .toggle-thumb-sun { opacity:0; transform:rotate(-90deg); }
+.toggle-thumb-moon { opacity:0; transform:rotate(90deg); }
+.toggle.on .toggle-thumb-moon { opacity:1; transform:rotate(0deg); }
+
+/* About */
+.about-card {
+  margin:16px;
+  background:var(--surface-light);
+  border-radius:var(--radius-md);
+  padding:20px;
+  text-align:center;
+  box-shadow:var(--shadow-light);
+  transition:background 0.3s;
+}
+body.dark .about-card { background:var(--card-dark); box-shadow:var(--shadow-dark); }
+.about-logo {
+  width:52px; height:52px;
+  background:linear-gradient(135deg,var(--green-primary),var(--green-glow));
+  border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 12px;
+}
+.about-name {
+  font-family:'Poppins'; font-size:15px; font-weight:700;
+  color:var(--text-primary-light);
+}
+body.dark .about-name { color:var(--text-primary-dark); }
+.about-ver {
+  font-size:11px; color:var(--text-muted-light);
+  margin:2px 0 12px;
+}
+body.dark .about-ver { color:var(--text-muted-dark); }
+.about-copy {
+  font-size:11px; color:var(--text-muted-light);
+  font-family:'Poppins'; font-style:italic;
+}
+body.dark .about-copy { color:var(--text-muted-dark); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.55);
+  backdrop-filter:blur(6px);
+  z-index:500;
+  display:none; align-items:flex-end; justify-content:center;
+}
+.modal-overlay.open { display:flex; }
+.modal-sheet {
+  width:100%; max-width:430px;
+  background:var(--surface-light);
+  border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+  padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 24px);
+  animation:slideSheet 0.32s cubic-bezier(0.34,1.1,0.64,1);
+  max-height:85dvh; overflow-y:auto;
+}
+body.dark .modal-sheet { background:var(--surface-dark); }
+@keyframes slideSheet {
+  from { transform:translateY(100%); }
+  to { transform:translateY(0); }
+}
+.modal-handle {
+  width:36px; height:4px;
+  background:rgba(0,0,0,0.15);
+  border-radius:99px;
+  margin:0 auto 20px;
+}
+body.dark .modal-handle { background:rgba(255,255,255,0.15); }
+.modal-title {
+  font-family:'Poppins'; font-size:17px; font-weight:700;
+  color:var(--text-primary-light);
+  margin-bottom:20px;
+}
+body.dark .modal-title { color:var(--text-primary-dark); }
+.form-group { margin-bottom:14px; }
+.form-label {
+  font-size:12px; font-weight:600;
+  color:var(--text-muted-light);
+  text-transform:uppercase; letter-spacing:0.5px;
+  margin-bottom:6px; display:block;
+  font-family:'Inter';
+}
+body.dark .form-label { color:var(--text-muted-dark); }
+.form-input {
+  width:100%;
+  background:var(--green-mist);
+  border:1.5px solid transparent;
+  border-radius:var(--radius-sm);
+  padding:12px 14px;
+  font-size:14px; font-family:'Inter';
+  color:var(--text-primary-light);
+  outline:none;
+  transition:border-color 0.2s, background 0.3s;
+}
+body.dark .form-input {
+  background:var(--card-dark);
+  color:var(--text-primary-dark);
+}
+.form-input:focus { border-color:var(--green-primary); }
+.form-hint {
+  font-size:11px; color:var(--text-muted-light);
+  margin-top:5px; font-family:'Inter';
+}
+body.dark .form-hint { color:var(--text-muted-dark); }
+.form-preview {
+  background:rgba(0,170,91,0.07);
+  border-radius:var(--radius-sm);
+  padding:10px 14px;
+  margin-bottom:14px;
+  font-size:12px; font-family:'Inter';
+  color:var(--green-primary);
+  min-height:36px;
+}
+.btn-primary {
+  width:100%;
+  background:linear-gradient(135deg,var(--green-primary),var(--green-glow));
+  color:#fff;
+  border:none;
+  border-radius:var(--radius-sm);
+  padding:14px;
+  font-size:15px; font-weight:700;
+  font-family:'Poppins';
+  cursor:pointer;
+  transition:transform 0.15s, box-shadow 0.15s;
+  box-shadow:0 4px 16px rgba(0,170,91,0.3);
+}
+.btn-primary:active { transform:scale(0.97); }
+.btn-secondary {
+  width:100%;
+  background:transparent;
+  color:var(--text-muted-light);
+  border:1.5px solid rgba(0,0,0,0.1);
+  border-radius:var(--radius-sm);
+  padding:13px;
+  font-size:14px; font-weight:600;
+  font-family:'Poppins';
+  cursor:pointer;
+  margin-top:8px;
+  transition:all 0.15s;
+}
+body.dark .btn-secondary {
+  color:var(--text-muted-dark);
+  border-color:rgba(255,255,255,0.1);
+}
+
+/* ── CONFETTI CANVAS ── */
+#confetti-canvas {
+  position:fixed; inset:0;
+  pointer-events:none;
+  z-index:9999;
+  display:none;
+}
+
+/* ── TOAST ── */
+.toast {
+  position:fixed;
+  bottom:calc(var(--nav-height) + env(safe-area-inset-bottom,0px) + 16px);
+  left:50%; transform:translateX(-50%) translateY(20px);
+  background:#1A1A1A;
+  color:#fff;
+  padding:10px 20px;
+  border-radius:99px;
+  font-size:13px; font-family:'Inter'; font-weight:500;
+  white-space:nowrap;
+  z-index:9990;
+  opacity:0;
+  transition:all 0.28s ease;
+  pointer-events:none;
+  max-width:calc(100vw - 40px);
+}
+.toast.show {
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+body.dark .toast { background:#2A3A2E; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:48px 24px; gap:12px; text-align:center;
+}
+.empty-icon {
+  width:72px; height:72px;
+  background:rgba(0,170,91,0.08);
+  border-radius:24px;
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:4px;
+}
+.empty-title {
+  font-family:'Poppins'; font-size:15px; font-weight:700;
+  color:var(--text-primary-light);
+}
+body.dark .empty-title { color:var(--text-primary-dark); }
+.empty-sub { font-size:13px; color:var(--text-muted-light); font-family:'Inter'; }
+body.dark .empty-sub { color:var(--text-muted-dark); }
+
+/* ── BULK UPLOAD MODAL ── */
+.bulk-modal-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(8px);
+  z-index:550;
+  display:none; align-items:flex-end; justify-content:center;
+}
+.bulk-modal-overlay.open { display:flex; }
+.bulk-sheet {
+  width:100%; max-width:430px;
+  background:var(--surface-light);
+  border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+  display:flex; flex-direction:column;
+  max-height:92dvh;
+  animation:slideSheet 0.32s cubic-bezier(0.34,1.1,0.64,1);
+  overflow:hidden;
+}
+body.dark .bulk-sheet { background:var(--surface-dark); }
+
+.bulk-header {
+  padding:16px 20px 12px;
+  border-bottom:1px solid rgba(0,0,0,0.06);
+  flex-shrink:0;
+}
+body.dark .bulk-header { border-bottom-color:rgba(255,255,255,0.06); }
+.bulk-title {
+  font-family:'Poppins'; font-size:17px; font-weight:700;
+  color:var(--text-primary-light); margin-bottom:2px;
+}
+body.dark .bulk-title { color:var(--text-primary-dark); }
+.bulk-sub { font-size:12px; color:var(--text-muted-light); font-family:'Inter'; }
+body.dark .bulk-sub { color:var(--text-muted-dark); }
+
+/* Step indicator */
+.bulk-steps {
+  display:flex; align-items:center; gap:0;
+  padding:12px 20px;
+  flex-shrink:0;
+}
+.bulk-step {
+  display:flex; align-items:center; gap:6px;
+  flex:1;
+}
+.step-circle {
+  width:26px; height:26px;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; font-family:'Poppins';
+  flex-shrink:0;
+  transition:all 0.3s;
+}
+.step-circle.done { background:var(--green-primary); color:#fff; }
+.step-circle.active { background:var(--green-primary); color:#fff; box-shadow:0 0 0 4px rgba(0,170,91,0.2); }
+.step-circle.idle { background:rgba(0,0,0,0.07); color:var(--text-muted-light); }
+body.dark .step-circle.idle { background:rgba(255,255,255,0.1); color:var(--text-muted-dark); }
+.step-label {
+  font-size:10px; font-weight:600; font-family:'Inter';
+  color:var(--text-muted-light);
+  transition:color 0.3s;
+}
+body.dark .step-label { color:var(--text-muted-dark); }
+.step-label.active { color:var(--green-primary); }
+.step-line {
+  flex:1; height:2px;
+  background:rgba(0,0,0,0.08);
+  margin:0 4px;
+  border-radius:99px;
+  transition:background 0.3s;
+}
+body.dark .step-line { background:rgba(255,255,255,0.08); }
+.step-line.done { background:var(--green-primary); }
+
+.bulk-body { flex:1; overflow-y:auto; padding:0 20px 20px; -webkit-overflow-scrolling:touch; }
+.bulk-body::-webkit-scrollbar { display:none; }
+.bulk-footer {
+  padding:12px 20px calc(env(safe-area-inset-bottom,0px) + 16px);
+  border-top:1px solid rgba(0,0,0,0.06);
+  display:flex; gap:10px; flex-shrink:0;
+}
+body.dark .bulk-footer { border-top-color:rgba(255,255,255,0.06); }
+
+/* Step 1 — Format & Download */
+.format-card {
+  background:var(--green-mist);
+  border-radius:var(--radius-md);
+  padding:16px;
+  margin-bottom:14px;
+  transition:background 0.3s;
+}
+body.dark .format-card { background:rgba(0,170,91,0.08); }
+.format-title {
+  font-family:'Poppins'; font-size:13px; font-weight:700;
+  color:var(--text-primary-light); margin-bottom:8px;
+  display:flex; align-items:center; gap:6px;
+}
+body.dark .format-title { color:var(--text-primary-dark); }
+.format-table {
+  width:100%; border-collapse:collapse;
+  font-size:11.5px; font-family:'JetBrains Mono';
+}
+.format-table th {
+  background:var(--green-primary); color:#fff;
+  padding:6px 10px; text-align:left;
+  font-family:'Inter'; font-size:11px; font-weight:600;
+}
+.format-table th:first-child { border-radius:6px 0 0 0; }
+.format-table th:last-child { border-radius:0 6px 0 0; }
+.format-table td {
+  padding:6px 10px;
+  color:var(--text-primary-light);
+  border-bottom:1px solid rgba(0,0,0,0.05);
+  font-size:11px;
+}
+body.dark .format-table td { color:var(--text-primary-dark); border-bottom-color:rgba(255,255,255,0.05); }
+.format-table tr:nth-child(even) td { background:rgba(0,0,0,0.02); }
+body.dark .format-table tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+
+.rule-list { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.rule-item {
+  display:flex; align-items:flex-start; gap:8px;
+  font-size:12px; font-family:'Inter';
+  color:var(--text-muted-light);
+}
+body.dark .rule-item { color:var(--text-muted-dark); }
+.rule-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--green-primary);
+  margin-top:5px; flex-shrink:0;
+}
+.dl-btns { display:flex; gap:8px; }
+.dl-btn {
+  flex:1; padding:10px 8px;
+  border-radius:var(--radius-sm);
+  border:1.5px solid var(--green-primary);
+  background:transparent;
+  color:var(--green-primary);
+  font-family:'Poppins'; font-size:12px; font-weight:700;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
+  transition:all 0.2s;
+}
+.dl-btn:active { background:rgba(0,170,91,0.08); transform:scale(0.97); }
+
+/* Upload zone */
+.upload-zone {
+  border:2px dashed rgba(0,170,91,0.35);
+  border-radius:var(--radius-md);
+  padding:28px 16px;
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.25s;
+  background:rgba(0,170,91,0.03);
+  margin-bottom:14px;
+}
+.upload-zone.drag-over {
+  border-color:var(--green-primary);
+  background:rgba(0,170,91,0.08);
+  transform:scale(1.01);
+}
+.upload-zone-icon {
+  width:52px; height:52px;
+  background:rgba(0,170,91,0.1);
+  border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 10px;
+}
+.upload-zone-title {
+  font-family:'Poppins'; font-size:14px; font-weight:700;
+  color:var(--text-primary-light); margin-bottom:4px;
+}
+body.dark .upload-zone-title { color:var(--text-primary-dark); }
+.upload-zone-sub { font-size:11.5px; color:var(--text-muted-light); font-family:'Inter'; }
+body.dark .upload-zone-sub { color:var(--text-muted-dark); }
+.upload-zone-file {
+  margin-top:10px; font-size:12px; font-weight:600;
+  color:var(--green-primary); font-family:'Inter';
+}
+
+/* Step 2 — Validasi */
+.val-summary {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:8px; margin-bottom:14px;
+}
+.val-sum-card {
+  border-radius:var(--radius-sm);
+  padding:10px 8px; text-align:center;
+}
+.val-sum-num {
+  font-family:'Poppins'; font-size:22px; font-weight:800; line-height:1;
+}
+.val-sum-lbl { font-size:10px; font-family:'Inter'; font-weight:600; margin-top:3px; }
+.vs-total { background:rgba(0,170,91,0.08); }
+.vs-total .val-sum-num { color:var(--green-primary); }
+.vs-total .val-sum-lbl { color:var(--green-primary); }
+.vs-ok { background:rgba(59,130,246,0.08); }
+.vs-ok .val-sum-num { color:var(--blue); }
+.vs-ok .val-sum-lbl { color:var(--blue); }
+.vs-err { background:rgba(255,71,87,0.08); }
+.vs-err .val-sum-num { color:var(--danger); }
+.vs-err .val-sum-lbl { color:var(--danger); }
+
+.val-filter-row {
+  display:flex; gap:6px; margin-bottom:10px;
+}
+.val-chip {
+  padding:5px 12px; border-radius:99px;
+  font-size:11px; font-weight:600; font-family:'Inter';
+  cursor:pointer; border:1.5px solid rgba(0,0,0,0.08);
+  background:var(--surface-light); color:var(--text-muted-light);
+  transition:all 0.2s;
+}
+body.dark .val-chip { background:var(--card-dark); border-color:rgba(255,255,255,0.1); color:var(--text-muted-dark); }
+.val-chip.active { background:var(--green-primary); color:#fff; border-color:var(--green-primary); }
+.val-chip.err-chip.active { background:var(--danger); border-color:var(--danger); }
+
+.val-list { display:flex; flex-direction:column; gap:8px; }
+.val-row {
+  background:var(--green-mist);
+  border-radius:var(--radius-sm);
+  padding:10px 12px;
+  display:flex; align-items:flex-start; gap:10px;
+  border-left:3px solid transparent;
+  transition:background 0.3s;
+}
+body.dark .val-row { background:rgba(255,255,255,0.04); }
+.val-row.row-ok { border-left-color:var(--green-primary); }
+.val-row.row-err { border-left-color:var(--danger); background:rgba(255,71,87,0.04); }
+body.dark .val-row.row-err { background:rgba(255,71,87,0.08); }
+.val-row-num {
+  font-family:'JetBrains Mono'; font-size:11px;
+  color:var(--text-muted-light); min-width:22px;
+  margin-top:1px;
+}
+body.dark .val-row-num { color:var(--text-muted-dark); }
+.val-row-info { flex:1; min-width:0; }
+.val-row-name {
+  font-family:'Poppins'; font-size:12px; font-weight:700;
+  color:var(--text-primary-light);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+body.dark .val-row-name { color:var(--text-primary-dark); }
+.val-row-nik {
+  font-family:'JetBrains Mono'; font-size:10px;
+  color:var(--text-muted-light); margin-top:1px;
+}
+body.dark .val-row-nik { color:var(--text-muted-dark); }
+.val-row-parsed {
+  font-size:10.5px; color:var(--green-primary);
+  margin-top:3px; font-family:'Inter';
+}
+.val-row-error {
+  font-size:10.5px; color:var(--danger);
+  margin-top:3px; font-family:'Inter';
+}
+.val-status {
+  width:22px; height:22px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.val-status.ok { background:rgba(0,170,91,0.15); color:var(--green-primary); }
+.val-status.err { background:rgba(255,71,87,0.12); color:var(--danger); }
+
+/* Step 3 — Sukses */
+.success-view {
+  display:flex; flex-direction:column;
+  align-items:center; text-align:center;
+  padding:24px 0;
+  gap:12px;
+}
+.success-anim {
+  width:80px; height:80px;
+  background:linear-gradient(135deg,var(--green-primary),var(--green-glow));
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.success-title {
+  font-family:'Poppins'; font-size:20px; font-weight:800;
+  color:var(--text-primary-light);
+}
+body.dark .success-title { color:var(--text-primary-dark); }
+.success-sub { font-size:13px; color:var(--text-muted-light); font-family:'Inter'; }
+body.dark .success-sub { color:var(--text-muted-dark); }
+.success-stat {
+  background:var(--green-mist);
+  border-radius:var(--radius-md);
+  padding:14px 24px;
+  width:100%;
+}
+body.dark .success-stat { background:rgba(0,170,91,0.08); }
+.success-stat-num {
+  font-family:'JetBrains Mono'; font-size:36px; font-weight:700;
+  color:var(--green-primary); line-height:1;
+}
+.success-stat-lbl { font-size:12px; color:var(--text-muted-light); margin-top:4px; font-family:'Inter'; }
+body.dark .success-stat-lbl { color:var(--text-muted-dark); }
+
+/* ── CONFIRM MODAL ── */
+.confirm-modal {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(8px);
+  z-index:600;
+  display:none; align-items:center; justify-content:center;
+  padding:24px;
+}
+.confirm-modal.open { display:flex; }
+.confirm-box {
+  width:100%; max-width:320px;
+  background:var(--surface-light);
+  border-radius:var(--radius-lg);
+  padding:24px;
+  text-align:center;
+  animation:popIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+body.dark .confirm-box { background:var(--surface-dark); }
+@keyframes popIn {
+  from{transform:scale(0.8);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+.confirm-icon {
+  width:56px; height:56px;
+  background:rgba(255,71,87,0.1);
+  border-radius:18px;
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 14px;
+}
+.confirm-title {
+  font-family:'Poppins'; font-size:16px; font-weight:700;
+  color:var(--text-primary-light); margin-bottom:8px;
+}
+body.dark .confirm-title { color:var(--text-primary-dark); }
+.confirm-text { font-size:13px; color:var(--text-muted-light); margin-bottom:20px; font-family:'Inter'; }
+body.dark .confirm-text { color:var(--text-muted-dark); }
+.confirm-btns { display:flex; gap:10px; }
+.confirm-btns button {
+  flex:1; padding:12px;
+  border:none; border-radius:var(--radius-sm);
+  font-size:14px; font-weight:700; font-family:'Poppins';
+  cursor:pointer; transition:all 0.15s;
+}
+.btn-cancel { background:var(--green-mist); color:var(--text-primary-light); }
+body.dark .btn-cancel { background:var(--card-dark); color:var(--text-primary-dark); }
+.btn-danger { background:var(--danger); color:#fff; }
+
+/* Section header for nasabah/top10 */
+.page-header {
+  padding: calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;
+  background:linear-gradient(135deg,var(--green-deep),var(--green-primary));
+  display:flex; align-items:center; gap:12px;
+  position:sticky; top:0; z-index:100;
+}
+.page-header-title {
+  font-family:'Poppins'; font-size:17px; font-weight:700;
+  color:#fff; flex:1;
+}
+.page-header-btn {
+  width:36px; height:36px;
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:#fff; border:none;
+  transition:all 0.15s;
+}
+.page-header-btn:active { background:rgba(255,255,255,0.25); transform:scale(0.92); }
+
+/* Filter row */
+.filter-row {
+  display:flex; gap:8px;
+  padding:12px 16px 0;
+  overflow-x:auto;
+}
+.filter-row::-webkit-scrollbar { display:none; }
+.filter-chip {
+  padding:6px 14px;
+  border-radius:99px;
+  border:1.5px solid rgba(0,170,91,0.2);
+  font-size:12px; font-weight:600;
+  font-family:'Inter';
+  cursor:pointer;
+  white-space:nowrap;
+  color:var(--text-muted-light);
+  background:var(--surface-light);
+  transition:all 0.2s;
+  flex-shrink:0;
+}
+body.dark .filter-chip {
+  background:var(--card-dark);
+  color:var(--text-muted-dark);
+  border-color:rgba(255,255,255,0.1);
+}
+body.dark .dash-inner-card { background: var(--card-dark) !important; }
+
+.filter-chip.active {
+  background:var(--green-primary);
+  color:#fff; border-color:var(--green-primary);
+}
+
+/* ── BULK UPLOAD ── */
+.step-circle {
+  width:28px; height:28px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; font-family:'Poppins';
+  flex-shrink:0; transition:all 0.3s;
+}
+.step-circle.done { background:var(--green-primary); color:#fff; }
+.step-circle.active { background:var(--green-primary); color:#fff; box-shadow:0 0 0 4px rgba(0,170,91,0.2); }
+.step-circle.idle { background:rgba(0,0,0,0.07); color:var(--text-muted-light); }
+body.dark .step-circle.idle { background:rgba(255,255,255,0.1); color:var(--text-muted-dark); }
+.step-label { font-size:10px; font-weight:600; font-family:'Inter'; color:var(--text-muted-light); transition:color 0.3s; }
+body.dark .step-label { color:var(--text-muted-dark); }
+.step-label.active { color:var(--green-primary); }
+.step-line { flex:1; height:2px; background:rgba(0,0,0,0.08); margin:0 2px 14px; border-radius:99px; transition:background 0.3s; }
+body.dark .step-line { background:rgba(255,255,255,0.08); }
+.step-line.done { background:var(--green-primary); }
+.bulk-body { flex:1; overflow-y:auto; padding:0 20px 20px; -webkit-overflow-scrolling:touch; }
+.bulk-body::-webkit-scrollbar { display:none; }
+.bulk-footer { padding:12px 20px calc(env(safe-area-inset-bottom,0px)+16px); border-top:1px solid rgba(0,0,0,0.06); display:flex; gap:10px; flex-shrink:0; }
+body.dark .bulk-footer { border-top-color:rgba(255,255,255,0.06); }
+.format-card { background:var(--green-mist); border-radius:var(--radius-md); padding:16px; margin-bottom:14px; transition:background 0.3s; }
+body.dark .format-card { background:rgba(0,170,91,0.08); }
+.format-title { font-family:'Poppins'; font-size:13px; font-weight:700; color:var(--text-primary-light); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+body.dark .format-title { color:var(--text-primary-dark); }
+.format-table { width:100%; border-collapse:collapse; }
+.format-table th { background:var(--green-primary); color:#fff; padding:7px 10px; text-align:left; font-family:'Inter'; font-size:11px; font-weight:600; }
+.format-table th:first-child { border-radius:6px 0 0 0; }
+.format-table th:last-child { border-radius:0 6px 0 0; }
+.format-table td { padding:6px 10px; color:var(--text-primary-light); border-bottom:1px solid rgba(0,0,0,0.05); font-size:11px; font-family:'JetBrains Mono'; }
+body.dark .format-table td { color:var(--text-primary-dark); border-bottom-color:rgba(255,255,255,0.05); }
+.format-table tr:nth-child(even) td { background:rgba(0,0,0,0.02); }
+body.dark .format-table tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+.rule-list { display:flex; flex-direction:column; gap:7px; margin-bottom:14px; }
+.rule-item { display:flex; align-items:flex-start; gap:8px; font-size:12px; font-family:'Inter'; color:var(--text-muted-light); line-height:1.4; }
+body.dark .rule-item { color:var(--text-muted-dark); }
+.rule-dot { width:6px; height:6px; border-radius:50%; background:var(--green-primary); margin-top:5px; flex-shrink:0; }
+.dl-btns { display:flex; gap:8px; }
+.dl-btn { flex:1; padding:10px 8px; border-radius:var(--radius-sm); border:1.5px solid var(--green-primary); background:transparent; color:var(--green-primary); font-family:'Poppins'; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.2s; }
+.dl-btn:active { background:rgba(0,170,91,0.08); transform:scale(0.97); }
+.dl-btn.filled { background:var(--green-primary); color:#fff; }
+.upload-zone { border:2px dashed rgba(0,170,91,0.35); border-radius:var(--radius-md); padding:28px 16px; text-align:center; cursor:pointer; transition:all 0.25s; background:rgba(0,170,91,0.03); margin-bottom:14px; }
+.upload-zone.drag-over { border-color:var(--green-primary); background:rgba(0,170,91,0.08); transform:scale(1.01); }
+.upload-zone.has-file { border-color:var(--green-primary); border-style:solid; background:rgba(0,170,91,0.05); }
+.upload-zone-icon { width:52px; height:52px; background:rgba(0,170,91,0.1); border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; }
+.upload-zone-title { font-family:'Poppins'; font-size:14px; font-weight:700; color:var(--text-primary-light); margin-bottom:4px; }
+body.dark .upload-zone-title { color:var(--text-primary-dark); }
+.upload-zone-sub { font-size:11.5px; color:var(--text-muted-light); font-family:'Inter'; }
+body.dark .upload-zone-sub { color:var(--text-muted-dark); }
+.upload-zone-file { margin-top:10px; font-size:12px; font-weight:600; color:var(--green-primary); font-family:'Inter'; }
+.val-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+.val-sum-card { border-radius:var(--radius-sm); padding:10px 8px; text-align:center; }
+.val-sum-num { font-family:'Poppins'; font-size:22px; font-weight:800; line-height:1; }
+.val-sum-lbl { font-size:10px; font-family:'Inter'; font-weight:600; margin-top:3px; }
+.vs-total { background:rgba(0,170,91,0.08); } .vs-total .val-sum-num,.vs-total .val-sum-lbl { color:var(--green-primary); }
+.vs-ok { background:rgba(59,130,246,0.08); } .vs-ok .val-sum-num,.vs-ok .val-sum-lbl { color:var(--blue); }
+.vs-err { background:rgba(255,71,87,0.08); } .vs-err .val-sum-num,.vs-err .val-sum-lbl { color:var(--danger); }
+.val-filter-row { display:flex; gap:6px; margin-bottom:10px; overflow-x:auto; }
+.val-filter-row::-webkit-scrollbar { display:none; }
+.val-chip { padding:5px 12px; border-radius:99px; font-size:11px; font-weight:600; font-family:'Inter'; cursor:pointer; border:1.5px solid rgba(0,0,0,0.08); background:var(--surface-light); color:var(--text-muted-light); transition:all 0.2s; flex-shrink:0; white-space:nowrap; }
+body.dark .val-chip { background:var(--card-dark); border-color:rgba(255,255,255,0.1); color:var(--text-muted-dark); }
+.val-chip.active { background:var(--green-primary); color:#fff; border-color:var(--green-primary); }
+.val-chip.err-chip.active { background:var(--danger); border-color:var(--danger); }
+.val-list { display:flex; flex-direction:column; gap:8px; }
+.val-row { background:var(--green-mist); border-radius:var(--radius-sm); padding:10px 12px; display:flex; align-items:flex-start; gap:10px; border-left:3px solid transparent; transition:background 0.3s; }
+body.dark .val-row { background:rgba(255,255,255,0.04); }
+.val-row.row-ok { border-left-color:var(--green-primary); }
+.val-row.row-err { border-left-color:var(--danger); background:rgba(255,71,87,0.04); }
+body.dark .val-row.row-err { background:rgba(255,71,87,0.08); }
+.val-row-num { font-family:'JetBrains Mono'; font-size:11px; color:var(--text-muted-light); min-width:24px; margin-top:1px; }
+body.dark .val-row-num { color:var(--text-muted-dark); }
+.val-row-info { flex:1; min-width:0; }
+.val-row-name { font-family:'Poppins'; font-size:12px; font-weight:700; color:var(--text-primary-light); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+body.dark .val-row-name { color:var(--text-primary-dark); }
+.val-row-nik { font-family:'JetBrains Mono'; font-size:10px; color:var(--text-muted-light); margin-top:1px; }
+body.dark .val-row-nik { color:var(--text-muted-dark); }
+.val-row-parsed { font-size:10.5px; color:var(--green-primary); margin-top:3px; font-family:'Inter'; }
+.val-row-error { font-size:10.5px; color:var(--danger); margin-top:3px; font-family:'Inter'; }
+.val-status { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.val-status.ok { background:rgba(0,170,91,0.15); color:var(--green-primary); }
+.val-status.err { background:rgba(255,71,87,0.12); color:var(--danger); }
+.success-view { display:flex; flex-direction:column; align-items:center; text-align:center; padding:24px 0; gap:12px; }
+.success-anim { width:80px; height:80px; background:linear-gradient(135deg,var(--green-primary),var(--green-glow)); border-radius:50%; display:flex; align-items:center; justify-content:center; animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+.success-title { font-family:'Poppins'; font-size:20px; font-weight:800; color:var(--text-primary-light); }
+body.dark .success-title { color:var(--text-primary-dark); }
+.success-sub { font-size:13px; color:var(--text-muted-light); font-family:'Inter'; }
+body.dark .success-sub { color:var(--text-muted-dark); }
+.success-stats-row { display:flex; gap:10px; width:100%; }
+.success-stat { flex:1; background:var(--green-mist); border-radius:var(--radius-md); padding:14px 12px; text-align:center; }
+body.dark .success-stat { background:rgba(0,170,91,0.08); }
+.success-stat-num { font-family:'JetBrains Mono'; font-size:28px; font-weight:700; color:var(--green-primary); line-height:1; }
+.success-stat-num.blue { color:var(--blue); }
+.success-stat-lbl { font-size:11px; color:var(--text-muted-light); margin-top:4px; font-family:'Inter'; }
+body.dark .success-stat-lbl { color:var(--text-muted-dark); }
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<div id="toast" class="toast"></div>
+
+<!-- CONFIRM MODAL -->
+<div class="confirm-modal" id="confirm-modal">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirm-icon-wrap">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--danger)"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </div>
+    <div class="confirm-title" id="confirm-title">Hapus Data?</div>
+    <div class="confirm-text" id="confirm-text">Tindakan ini tidak dapat dibatalkan.</div>
+    <div class="confirm-btns">
+      <button class="btn-cancel" onclick="closeConfirm()">Batal</button>
+      <button class="btn-danger" id="confirm-ok-btn">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESET PIN MODAL ══ -->
+<div class="modal-overlay" id="reset-pin-modal">
+  <div class="modal-sheet" style="padding:20px 20px calc(env(safe-area-inset-bottom,0px)+24px);">
+    <div class="modal-handle"></div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="width:52px;height:52px;background:linear-gradient(135deg,rgba(0,170,91,0.15),rgba(0,212,110,0.1));border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green-primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div class="modal-title" style="margin-bottom:4px;">Ubah PIN</div>
+      <div id="reset-pin-sub" style="font-size:12px;color:var(--text-muted-light);font-family:'Inter';">Masukkan PIN 6 digit baru</div>
+    </div>
+    <!-- Mini dots display -->
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:12px;" id="reset-dots-wrap">
+      <div class="pin-dot" id="rd0" style="border-color:rgba(0,0,0,0.2);"></div>
+      <div class="pin-dot" id="rd1" style="border-color:rgba(0,0,0,0.2);"></div>
+      <div class="pin-dot" id="rd2" style="border-color:rgba(0,0,0,0.2);"></div>
+      <div class="pin-dot" id="rd3" style="border-color:rgba(0,0,0,0.2);"></div>
+      <div class="pin-dot" id="rd4" style="border-color:rgba(0,0,0,0.2);"></div>
+      <div class="pin-dot" id="rd5" style="border-color:rgba(0,0,0,0.2);"></div>
+    </div>
+    <div id="reset-pin-error" style="font-size:12px;color:var(--danger);text-align:center;min-height:18px;margin-bottom:8px;font-family:'Inter';font-weight:500;"></div>
+    <!-- Keypad inside modal -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="reset-keypad">
+      <button class="key-btn" style="background:var(--green-mist);color:var(--text-primary-light);border-radius:12px;height:56px;font-size:20px;box-shadow:none;" onclick="resetPinKey('1')">1</button>
+      <button class="key-btn" style="background:var(--green-mist);color:var(--text-primary-light);border-radius:12px;height:56px;font-size:20px;box-shadow:none;" onclick="resetPinKey('2')">2</button>
+      <button class="key-btn" style="background:var(--green-mist);color:var(--text-primary-light);border-radius:12px;height:56px;font-size:20px;box-shadow:none;" onclick="resetPinKey('3')">3</button>
+      <button class="key-btn" style="background:var(--green-mist);color:var(--text-primary-light);border-radius:12px;height:56px;font-size:20px;box-shadow:none;" onclick="resetPinKey('4')">4</button>
+      <button class="key-btn" style="background:var(--green-mist);color:var(--text-primary-light);border-radius:12px;height:56px;font-size:20px;box-shadow:none;" onclick="resetPinKey('5')">5</button>
+      <button class="key-btn" style="background:var(--green-mist);color:var(--text-primary-light);border-radius:12px;height:56px;font-size:20px;box-shadow:none;" onclick="resetPinKey('6')">6</button>
+      <button class="key-btn" style="background:var(--green-mist);color:var(--text-primary-light);border-radius:12px;height:56px;font-size:20px;box-shadow:none;" onclick="resetPinKey('7')">7</button>
+      <button class="key-btn" style="background:var(--green-mist);color:var(--text-primary-light);border-radius:12px;height:56px;font-size:20px;box-shadow:none;" onclick="resetPinKey('8')">8</button>
+      <button class="key-btn" style="background:var(--green-mist);color:var(--text-primary-light);border-radius:12px;height:56px;font-size:20px;box-shadow:none;" onclick="resetPinKey('9')">9</button>
+      <button class="key-btn key-del" style="background:rgba(255,71,87,0.08);color:var(--danger);border-radius:12px;height:56px;box-shadow:none;" onclick="resetPinDel()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+      </button>
+      <button class="key-btn" style="background:var(--green-mist);color:var(--text-primary-light);border-radius:12px;height:56px;font-size:20px;box-shadow:none;" onclick="resetPinKey('0')">0</button>
+      <button class="key-btn key-ok" style="border-radius:12px;height:56px;background:var(--green-primary);color:#fff;box-shadow:0 3px 12px rgba(0,170,91,0.3);" onclick="resetPinSubmit()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+    </div>
+    <button class="btn-secondary" onclick="closeResetPinModal()" style="margin-top:12px;">Batal</button>
+  </div>
+</div>
+
+<!-- ══ BULK UPLOAD MODAL ══ -->
+<div class="modal-overlay" id="bulk-modal" style="align-items:stretch;">
+  <div class="modal-sheet" style="border-radius:var(--radius-xl) var(--radius-xl) 0 0;display:flex;flex-direction:column;padding:0;max-height:92dvh;height:92dvh;">
+    <!-- Header -->
+    <div style="padding:16px 20px 0;flex-shrink:0;">
+      <div class="modal-handle"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div class="modal-title" style="margin-bottom:0;">Upload Massal Nasabah</div>
+        <button onclick="closeBulkModal()" style="width:32px;height:32px;border-radius:10px;border:none;background:rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted-light);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <!-- Step indicator -->
+      <div style="display:flex;align-items:center;padding:14px 0 12px;gap:4px;" id="bulk-steps">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div class="step-circle active" id="step-c1">1</div>
+          <span class="step-label active" id="step-l1">Format</span>
+        </div>
+        <div class="step-line" id="step-line1"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div class="step-circle idle" id="step-c2">2</div>
+          <span class="step-label" id="step-l2">Upload</span>
+        </div>
+        <div class="step-line" id="step-line2"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div class="step-circle idle" id="step-c3">3</div>
+          <span class="step-label" id="step-l3">Validasi</span>
+        </div>
+        <div class="step-line" id="step-line3"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div class="step-circle idle" id="step-c4">4</div>
+          <span class="step-label" id="step-l4">Selesai</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body (scrollable) -->
+    <div class="bulk-body" id="bulk-body"></div>
+
+    <!-- Footer -->
+    <div class="bulk-footer" id="bulk-footer"></div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="form-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="form-title">Tambah Nasabah</div>
+    <div class="form-group">
+      <label class="form-label">Nomor NIK (16 digit)</label>
+      <input class="form-input" id="f-nik" type="tel" maxlength="16" placeholder="3201XXXXXXXXXX1234" oninput="previewNIK()">
+      <div class="form-hint">NIK otomatis mendeteksi jenis kelamin & tanggal lahir</div>
+    </div>
+    <div class="form-preview" id="nik-preview">Masukkan NIK untuk melihat preview data</div>
+    <div class="form-group">
+      <label class="form-label">Nama Lengkap</label>
+      <input class="form-input" id="f-nama" type="text" placeholder="Nama sesuai KTP">
+    </div>
+    <button class="btn-primary" onclick="saveNasabah()">Simpan Nasabah</button>
+    <button class="btn-secondary" onclick="closeFormModal()">Batal</button>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- ══ PIN SCREEN ══ -->
+  <div id="pin-screen" class="screen active">
+
+    <!-- GREEN TOP HALF -->
+    <div class="pin-top">
+      <div class="pin-logo">
+        <svg width="38" height="38" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="5" y="20" width="26" height="12" rx="3" fill="rgba(255,255,255,0.2)"/>
+          <rect x="5" y="20" width="26" height="12" rx="3" stroke="white" stroke-width="1.4"/>
+          <rect x="8" y="14" width="20" height="8" rx="2" fill="rgba(255,255,255,0.15)"/>
+          <rect x="8" y="14" width="20" height="8" rx="2" stroke="white" stroke-width="1.2"/>
+          <rect x="11" y="9" width="3" height="6" rx="1.5" fill="rgba(255,255,255,0.5)"/>
+          <rect x="16.5" y="7" width="3" height="8" rx="1.5" fill="rgba(255,255,255,0.6)"/>
+          <rect x="22" y="9" width="3" height="6" rx="1.5" fill="rgba(255,255,255,0.5)"/>
+          <ellipse cx="12.5" cy="8" rx="2" ry="2.5" fill="#FFD700" opacity="0.95"/>
+          <ellipse cx="18" cy="5.5" rx="2.2" ry="2.8" fill="#FFD700"/>
+          <ellipse cx="23.5" cy="8" rx="2" ry="2.5" fill="#FFD700" opacity="0.95"/>
+          <ellipse cx="18" cy="6" rx="1" ry="1.4" fill="white" opacity="0.7"/>
+          <path d="M8 20 Q11 17 14 20 Q17 17 20 20 Q23 17 26 20 Q29 17 31 20" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div style="text-align:center;position:relative;z-index:1;">
+        <div class="pin-title">Customer Birthday<br>Assistant</div>
+        <div class="pin-subtitle" style="margin-top:8px;">Gentara Anugrah</div>
+      </div>
+    </div>
+
+    <!-- WHITE BOTTOM HALF -->
+    <div class="pin-keypad">
+      <!-- Label + dots here -->
+      <div class="pin-label" id="pin-label">Masukkan PIN</div>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot" id="d0"></div>
+        <div class="pin-dot" id="d1"></div>
+        <div class="pin-dot" id="d2"></div>
+        <div class="pin-dot" id="d3"></div>
+        <div class="pin-dot" id="d4"></div>
+        <div class="pin-dot" id="d5"></div>
+      </div>
+      <div class="pin-error-text" id="pin-error"></div>
+
+      <!-- Keypad -->
+      <div class="keypad-grid" id="keypad-grid">
+        <button class="key-btn" onclick="pinKey('1',event)">
+          <span>1</span><span class="key-sub">&nbsp;</span>
+        </button>
+        <button class="key-btn" onclick="pinKey('2',event)">
+          <span>2</span><span class="key-sub">ABC</span>
+        </button>
+        <button class="key-btn" onclick="pinKey('3',event)">
+          <span>3</span><span class="key-sub">DEF</span>
+        </button>
+        <button class="key-btn" onclick="pinKey('4',event)">
+          <span>4</span><span class="key-sub">GHI</span>
+        </button>
+        <button class="key-btn" onclick="pinKey('5',event)">
+          <span>5</span><span class="key-sub">JKL</span>
+        </button>
+        <button class="key-btn" onclick="pinKey('6',event)">
+          <span>6</span><span class="key-sub">MNO</span>
+        </button>
+        <button class="key-btn" onclick="pinKey('7',event)">
+          <span>7</span><span class="key-sub">PQRS</span>
+        </button>
+        <button class="key-btn" onclick="pinKey('8',event)">
+          <span>8</span><span class="key-sub">TUV</span>
+        </button>
+        <button class="key-btn" onclick="pinKey('9',event)">
+          <span>9</span><span class="key-sub">WXYZ</span>
+        </button>
+        <button class="key-btn key-del" onclick="pinDel()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+        </button>
+        <button class="key-btn" onclick="pinKey('0',event)">
+          <span>0</span><span class="key-sub">+</span>
+        </button>
+        <button class="key-btn key-ok" onclick="pinSubmit()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+
+      <div style="text-align:center;padding-top:16px;">
+        <div style="font-size:10px;color:#BBBBBB;font-family:'Poppins';font-style:italic;letter-spacing:0.3px;">
+          © Gentara Anugrah All Rights Reserved 2026
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MAIN APP ══ -->
+  <div id="main-app" style="display:none;flex-direction:column;min-height:100dvh;">
+
+    <!-- ── HEADER ── -->
+    <div class="app-header" id="main-header">
+      <div class="header-row">
+        <div class="header-left">
+          <div class="header-icon-wrap">
+            <svg width="22" height="22" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5" y="20" width="26" height="12" rx="3" fill="rgba(255,255,255,0.25)" stroke="white" stroke-width="1.4"/>
+              <rect x="8" y="14" width="20" height="8" rx="2" fill="rgba(255,255,255,0.18)" stroke="white" stroke-width="1.2"/>
+              <rect x="11" y="9" width="3" height="6" rx="1.5" fill="rgba(255,255,255,0.5)"/>
+              <rect x="16.5" y="7" width="3" height="8" rx="1.5" fill="rgba(255,255,255,0.6)"/>
+              <rect x="22" y="9" width="3" height="6" rx="1.5" fill="rgba(255,255,255,0.5)"/>
+              <ellipse cx="12.5" cy="8" rx="2" ry="2.5" fill="#FFD700" opacity="0.9"/>
+              <ellipse cx="18" cy="5.5" rx="2.2" ry="2.8" fill="#FFD700"/>
+              <ellipse cx="23.5" cy="8" rx="2" ry="2.5" fill="#FFD700" opacity="0.9"/>
+              <ellipse cx="18" cy="6" rx="1" ry="1.4" fill="white" opacity="0.6"/>
+              <path d="M8 20 Q11 17 14 20 Q17 17 20 20 Q23 17 26 20 Q29 17 31 20" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="header-title">CBA</div>
+            <div class="header-sub">Customer Birthday Assistant</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="hdr-btn" id="dark-toggle-btn" onclick="toggleDark()" title="Toggle Dark Mode">
+            <svg id="dark-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <button class="hdr-btn" onclick="confirmLogout()" title="Keluar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="ticker-wrap">
+        <div class="ticker-track" id="ticker-track">
+          <!-- filled by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGES ── -->
+    <div id="page-beranda" class="scroll-area" style="display:block;">
+      <!-- Stats -->
+      <div style="height:16px;"></div>
+      <div class="stat-row" id="stat-row"></div>
+      <!-- Hero -->
+      <div id="hero-section"></div>
+      <!-- More today -->
+      <div class="section" id="more-today-section" style="display:none;">
+        <div class="section-title">Juga Berulang Tahun Hari Ini</div>
+        <div class="mini-bday-row" id="more-today-list"></div>
+      </div>
+      <!-- Quick Stats -->
+      <div class="section" style="margin-bottom:16px;">
+        <div class="section-title">Statistik Cepat</div>
+        <div class="card" id="quick-stats-card"></div>
+      </div>
+    </div>
+
+    <div id="page-nasabah" style="display:none;flex-direction:column;flex:1;">
+      <div class="page-header">
+        <div class="page-header-title">Nasabah</div>
+        <button class="page-header-btn" onclick="openFormModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      <div class="search-bar-wrap" style="position:relative;top:0;">
+        <div class="search-bar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search-input" placeholder="Cari nama atau NIK..." oninput="renderNasabah()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="search-clear" style="cursor:pointer;display:none;" onclick="clearSearch()"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+      </div>
+      <div style="padding:8px 16px 0;font-size:12px;color:var(--text-muted-light);font-family:'Inter';" id="nasabah-count-label"></div>
+      <div class="nasabah-list" id="nasabah-list" style="padding-top:10px;padding-bottom:calc(var(--nav-height) + 80px);"></div>
+    </div>
+
+    <div id="page-ulang-tahun" style="display:none;flex-direction:column;">
+      <div class="page-header">
+        <div class="page-header-title">🎂 Top 10 Ulang Tahun</div>
+      </div>
+      <div class="filter-row" id="filter-row">
+        <div class="filter-chip active" onclick="setFilter('all',this)">Semua</div>
+        <div class="filter-chip" onclick="setFilter('today',this)">Hari Ini</div>
+        <div class="filter-chip" onclick="setFilter('week',this)">Minggu Ini</div>
+        <div class="filter-chip" onclick="setFilter('month',this)">Bulan Ini</div>
+        <div class="filter-chip" onclick="setFilter('male',this)">Laki-laki</div>
+        <div class="filter-chip" onclick="setFilter('female',this)">Perempuan</div>
+      </div>
+      <div class="top10-list" id="top10-list" style="padding-top:12px;padding-bottom:calc(var(--nav-height) + 32px);"></div>
+    </div>
+
+    <div id="page-pengaturan" style="display:none;flex-direction:column;">
+      <div class="page-header">
+        <div class="page-header-title">Pengaturan</div>
+      </div>
+      <div style="padding:16px 0;display:flex;flex-direction:column;gap:0;padding-bottom:calc(var(--nav-height) + 32px);">
+        <div class="settings-list">
+
+          <div class="settings-card">
+            <div class="settings-label">Tampilan</div>
+            <div class="setting-row" onclick="toggleDark()">
+              <div class="setting-icon si-gold">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              </div>
+              <div class="setting-text">
+                <div class="setting-title">Mode Gelap</div>
+                <div class="setting-desc">Aktifkan tampilan dark mode</div>
+              </div>
+              <div class="setting-right">
+                <div class="toggle" id="dark-toggle" onclick="event.stopPropagation();toggleDark()">
+                  <div class="toggle-thumb">
+                    <span class="toggle-thumb-icon toggle-thumb-sun">☀️</span>
+                    <span class="toggle-thumb-icon toggle-thumb-moon">🌙</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-label">Data</div>
+            <div class="setting-row" onclick="exportJSON()">
+              <div class="setting-icon si-green">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+              <div class="setting-text">
+                <div class="setting-title">Export Data JSON</div>
+                <div class="setting-desc">Unduh semua data nasabah</div>
+              </div>
+              <div class="setting-right">
+                <svg class="setting-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+            <div class="setting-row" onclick="triggerImportJSON()">
+              <div class="setting-icon si-blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <div class="setting-text">
+                <div class="setting-title">Import Data JSON</div>
+                <div class="setting-desc">Muat data dari file JSON</div>
+              </div>
+              <div class="setting-right">
+                <svg class="setting-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+            <input type="file" id="import-file" accept=".json" style="position:fixed;top:-999px;left:-999px;opacity:0;pointer-events:none;" onchange="importJSON(event)">
+            <div class="setting-row" onclick="openBulkModal()">
+              <div class="setting-icon" style="background:linear-gradient(135deg,rgba(0,170,91,0.15),rgba(0,212,110,0.1));color:var(--green-primary);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
+              </div>
+              <div class="setting-text">
+                <div class="setting-title">Upload Massal CSV/Excel</div>
+                <div class="setting-desc" style="color:var(--green-primary);font-weight:600;">Import banyak nasabah sekaligus</div>
+              </div>
+              <div class="setting-right">
+                <span style="background:var(--green-primary);color:#fff;font-size:10px;font-weight:700;font-family:'Poppins';padding:3px 8px;border-radius:99px;">BARU</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-label">Keamanan</div>
+            <div class="setting-row" onclick="startResetPIN()">
+              <div class="setting-icon si-gold">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+              <div class="setting-text">
+                <div class="setting-title">Reset PIN</div>
+                <div class="setting-desc">Ubah PIN keamanan aplikasi</div>
+              </div>
+              <div class="setting-right">
+                <svg class="setting-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-label">Bahaya</div>
+            <div class="setting-row" onclick="confirmDeleteAll()">
+              <div class="setting-icon si-red">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              </div>
+              <div class="setting-text">
+                <div class="setting-title" style="color:var(--danger)">Hapus Semua Data</div>
+                <div class="setting-desc">Menghapus seluruh data nasabah</div>
+              </div>
+              <div class="setting-right">
+                <svg class="setting-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--danger)"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-card">
+            <div class="about-logo">
+              <svg width="28" height="28" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="5" y="20" width="26" height="12" rx="3" fill="rgba(255,255,255,0.25)" stroke="white" stroke-width="1.4"/>
+                <rect x="8" y="14" width="20" height="8" rx="2" fill="rgba(255,255,255,0.18)" stroke="white" stroke-width="1.2"/>
+                <rect x="11" y="9" width="3" height="6" rx="1.5" fill="rgba(255,255,255,0.5)"/>
+                <rect x="16.5" y="7" width="3" height="8" rx="1.5" fill="rgba(255,255,255,0.6)"/>
+                <rect x="22" y="9" width="3" height="6" rx="1.5" fill="rgba(255,255,255,0.5)"/>
+                <ellipse cx="12.5" cy="8" rx="2" ry="2.5" fill="#FFD700" opacity="0.9"/>
+                <ellipse cx="18" cy="5.5" rx="2.2" ry="2.8" fill="#FFD700"/>
+                <ellipse cx="23.5" cy="8" rx="2" ry="2.5" fill="#FFD700" opacity="0.9"/>
+                <ellipse cx="18" cy="6" rx="1" ry="1.4" fill="white" opacity="0.6"/>
+                <path d="M8 20 Q11 17 14 20 Q17 17 20 20 Q23 17 26 20 Q29 17 31 20" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="about-name">Customer Birthday Assistant</div>
+            <div class="about-ver">Versi 1.0.0 · Gentara Anugrah</div>
+            <div class="about-copy">© Gentara Anugrah All Rights Reserved 2026</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BOTTOM NAV ── -->
+    <div class="bottom-nav">
+      <div class="nav-item active" id="nav-beranda" onclick="switchTab('beranda')">
+        <div class="nav-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span class="nav-label">Beranda</span>
+      </div>
+      <div class="nav-item" id="nav-nasabah" onclick="switchTab('nasabah')">
+        <div class="nav-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <span class="nav-label">Nasabah</span>
+      </div>
+      <div class="nav-item" id="nav-ulang-tahun" onclick="switchTab('ulang-tahun')">
+        <div class="nav-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2 1 2 1"/><line x1="2" y1="21" x2="22" y2="21"/><path d="M7 8v2"/><path d="M12 8v2"/><path d="M17 8v2"/><path d="M7 4l.5 4"/><path d="M12 4v4"/><path d="M17 4l-.5 4"/></svg>
+        </div>
+        <span class="nav-label">Ulang Tahun</span>
+      </div>
+      <div class="nav-item" id="nav-pengaturan" onclick="switchTab('pengaturan')">
+        <div class="nav-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+        <span class="nav-label">Pengaturan</span>
+      </div>
+    </div>
+  </div><!-- /main-app -->
+
+</div><!-- /app -->
+
+<script>
+/* ══════════════════════════════════
+   STATE & STORAGE
+══════════════════════════════════ */
+const DEFAULT_PIN = '123456';
+let appData = { nasabah: [] };
+let darkMode = false;
+let currentFilter = 'all';
+let editingId = null;
+let confirmCallback = null;
+let pinBuffer = '';
+let pinMode = 'login'; // login | setup | confirm
+let newPinBuffer = '';
+
+function save() {
+  localStorage.setItem('cba_data', JSON.stringify(appData));
+}
+function load() {
+  try {
+    const d = localStorage.getItem('cba_data');
+    if (d) appData = JSON.parse(d);
+  } catch(e) {}
+  darkMode = localStorage.getItem('cba_dark') === '1';
+  if (darkMode) document.body.classList.add('dark');
+  updateDarkUI();
+}
+function getPin() { return localStorage.getItem('cba_pin') || DEFAULT_PIN; }
+function setPin(p) { localStorage.setItem('cba_pin', p); }
+
+/* ══════════════════════════════════
+   PIN LOGIC
+══════════════════════════════════ */
+function pinKey(k, e) {
+  if (pinBuffer.length >= 6) return;
+  pinBuffer += k;
+  updateDots();
+  if (e) addRipple(e);
+  if (pinBuffer.length === 6) setTimeout(pinSubmit, 140);
+}
+function pinDel() {
+  if (!pinBuffer.length) return;
+  pinBuffer = pinBuffer.slice(0,-1);
+  updateDots();
+}
+function pinSubmit() {
+  if (pinBuffer.length < 6) return;
+  if (pinMode === 'login') {
+    if (pinBuffer === getPin()) {
+      enterApp();
+    } else {
+      pinError('PIN salah, coba lagi');
+    }
+  } else if (pinMode === 'setup') {
+    newPinBuffer = pinBuffer;
+    pinBuffer = '';
+    updateDots();
+    document.getElementById('pin-label').textContent = 'Konfirmasi PIN baru';
+    document.getElementById('pin-error').textContent = '';
+    pinMode = 'confirm';
+  } else if (pinMode === 'confirm') {
+    if (pinBuffer === newPinBuffer) {
+      setPin(pinBuffer);
+      pinMode = 'login';
+      pinBuffer = '';
+      // Return to app
+      document.getElementById('main-app').style.display='flex';
+      document.getElementById('pin-screen').style.display='none';
+      document.getElementById('pin-screen').classList.remove('active');
+      document.getElementById('pin-label').textContent='Masukkan PIN';
+      document.getElementById('pin-error').textContent='';
+      updateDots();
+      showToast('✅ PIN 6 digit berhasil diubah');
+    } else {
+      pinError('PIN tidak cocok, ulangi dari awal');
+      pinMode = 'setup';
+      newPinBuffer = '';
+    }
+  }
+}
+function pinError(msg) {
+  document.getElementById('pin-error').textContent = msg;
+  document.getElementById('pin-dots').classList.add('shake');
+  for(let i=0;i<6;i++){const d=document.getElementById('d'+i);if(d&&d.classList.contains('filled'))d.classList.add('error');}
+  setTimeout(() => {
+    document.getElementById('pin-dots').classList.remove('shake');
+    for(let i=0;i<6;i++){const d=document.getElementById('d'+i);if(d){d.classList.remove('error');d.classList.remove('filled');}}
+    pinBuffer = '';
+  }, 650);
+}
+function updateDots() {
+  for (let i=0;i<6;i++) {
+    const d = document.getElementById('d'+i);
+    if (!d) continue;
+    d.classList.toggle('filled', i < pinBuffer.length);
+    d.classList.remove('error');
+  }
+}
+function addRipple(e) {
+  if (!e || !e.currentTarget) return;
+  const btn = e.currentTarget;
+  const r = document.createElement('span');
+  r.className = 'key-ripple';
+  const rect = btn.getBoundingClientRect();
+  const x = (e.clientX||rect.left+rect.width/2) - rect.left;
+  const y = (e.clientY||rect.top+rect.height/2) - rect.top;
+  r.style.left = x+'px'; r.style.top = y+'px';
+  btn.appendChild(r);
+  setTimeout(()=>r.remove(), 600);
+}
+function enterApp() {
+  document.getElementById('pin-screen').style.display = 'none';
+  document.getElementById('pin-screen').classList.remove('active');
+  document.getElementById('main-app').style.display = 'flex';
+  pinBuffer = '';
+  updateDots();
+  document.getElementById('pin-error').textContent = '';
+  refreshAll();
+}
+function confirmLogout() {
+  openConfirm(
+    'Keluar Aplikasi?',
+    'Kunci layar dan kembali ke PIN.',
+    ()=>{
+      document.getElementById('main-app').style.display='none';
+      document.getElementById('pin-screen').style.display='flex';
+      document.getElementById('pin-screen').classList.add('active');
+      pinBuffer=''; pinMode='login';
+      document.getElementById('pin-label').textContent='Masukkan PIN';
+      document.getElementById('pin-error').textContent='';
+      updateDots();
+    },
+    'logout'
+  );
+}
+/* ── RESET PIN — MODAL SHEET ── */
+let resetPinBuffer = '';
+let resetPinNewBuffer = '';
+let resetPinMode = 'new'; // new | confirm
+
+function startResetPIN() {
+  resetPinBuffer = '';
+  resetPinNewBuffer = '';
+  resetPinMode = 'new';
+  updateResetDots();
+  document.getElementById('reset-pin-sub').textContent = 'Masukkan PIN 6 digit baru';
+  document.getElementById('reset-pin-error').textContent = '';
+  document.getElementById('reset-pin-modal').classList.add('open');
+}
+function closeResetPinModal() {
+  document.getElementById('reset-pin-modal').classList.remove('open');
+  resetPinBuffer = ''; resetPinNewBuffer = ''; resetPinMode = 'new';
+}
+function updateResetDots() {
+  for(let i=0;i<6;i++){
+    const d=document.getElementById('rd'+i);
+    if(!d)return;
+    d.classList.toggle('filled', i < resetPinBuffer.length);
+    d.classList.remove('error');
+  }
+}
+function resetPinKey(k) {
+  if(resetPinBuffer.length >= 6) return;
+  resetPinBuffer += k;
+  updateResetDots();
+  if(resetPinBuffer.length === 6) setTimeout(resetPinSubmit, 140);
+}
+function resetPinDel() {
+  if(!resetPinBuffer.length) return;
+  resetPinBuffer = resetPinBuffer.slice(0,-1);
+  updateResetDots();
+}
+function resetPinSubmit() {
+  if(resetPinBuffer.length < 6) return;
+  if(resetPinMode === 'new') {
+    resetPinNewBuffer = resetPinBuffer;
+    resetPinBuffer = '';
+    updateResetDots();
+    document.getElementById('reset-pin-sub').textContent = 'Konfirmasi PIN baru';
+    document.getElementById('reset-pin-error').textContent = '';
+    resetPinMode = 'confirm';
+  } else {
+    if(resetPinBuffer === resetPinNewBuffer) {
+      setPin(resetPinBuffer);
+      closeResetPinModal();
+      showToast('✅ PIN berhasil diubah');
+    } else {
+      // Error — shake and restart
+      document.getElementById('reset-pin-error').textContent = 'PIN tidak cocok, ulangi dari awal';
+      document.getElementById('reset-dots-wrap').classList.add('shake');
+      for(let i=0;i<6;i++){const d=document.getElementById('rd'+i);if(d&&d.classList.contains('filled'))d.classList.add('error');}
+      setTimeout(()=>{
+        document.getElementById('reset-dots-wrap').classList.remove('shake');
+        resetPinBuffer=''; resetPinNewBuffer=''; resetPinMode='new';
+        updateResetDots();
+        document.getElementById('reset-pin-sub').textContent='Masukkan PIN 6 digit baru';
+        document.getElementById('reset-pin-error').textContent='';
+      }, 700);
+    }
+  }
+}
+function startResetPIN_OLD() {
+  // replaced by modal sheet
+}
+
+/* ══════════════════════════════════
+   NIK PARSER
+══════════════════════════════════ */
+function parseNIK(nik) {
+  if (nik.length !== 16) return null;
+  let dd = parseInt(nik.substring(6,8));
+  const mm = parseInt(nik.substring(8,10));
+  const yy = parseInt(nik.substring(10,12));
+  let gender = 'L';
+  if (dd > 40) { dd -= 40; gender = 'P'; }
+  const now = new Date();
+  const century = (yy + 2000 > now.getFullYear() + 5) ? 1900 : 2000;
+  const year = century + yy;
+  const birthDate = new Date(year, mm-1, dd);
+  if (isNaN(birthDate.getTime()) || mm < 1 || mm > 12 || dd < 1 || dd > 31) return null;
+  const age = now.getFullYear() - year - (now < new Date(now.getFullYear(),mm-1,dd) ? 1 : 0);
+  return { gender, day: dd, month: mm, year, age, birthDate };
+}
+function daysUntilBirthday(month, day) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let bday = new Date(now.getFullYear(), month-1, day);
+  if (bday < today) bday.setFullYear(bday.getFullYear()+1);
+  return Math.round((bday - today) / 86400000);
+}
+function nikMask(nik) {
+  if (nik.length < 10) return nik;
+  return nik.substring(0,4) + '••••••••' + nik.substring(12);
+}
+function formatDate(d,m,y) {
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+  return `${String(d).padStart(2,'0')} ${months[m-1]} ${y}`;
+}
+
+/* ══════════════════════════════════
+   NAVIGATION
+══════════════════════════════════ */
+const tabs = ['beranda','nasabah','ulang-tahun','pengaturan'];
+function switchTab(t) {
+  tabs.forEach(tab => {
+    document.getElementById('page-'+tab).style.display = 'none';
+    document.getElementById('nav-'+tab).classList.remove('active');
+  });
+  document.getElementById('page-'+t).style.display = 'flex';
+  document.getElementById('nav-'+t).classList.add('active');
+  if (t==='beranda') { document.getElementById('page-beranda').style.display='block'; renderBeranda(); }
+  if (t==='nasabah') renderNasabah();
+  if (t==='ulang-tahun') renderTop10();
+}
+
+/* ══════════════════════════════════
+   TICKER
+══════════════════════════════════ */
+function refreshTicker() {
+  const today = appData.nasabah.filter(n=>{ const p=parseNIK(n.nik); return p&&daysUntilBirthday(p.month,p.day)===0; });
+  const week = appData.nasabah.filter(n=>{ const p=parseNIK(n.nik); if(!p)return false; const d=daysUntilBirthday(p.month,p.day); return d<=7&&d>0; });
+  const total = appData.nasabah.length;
+  const items = [
+    `<span class="ticker-badge">${total}</span> Total Nasabah`,
+    today.length ? `🎂 <span class="ticker-badge" style="background:rgba(255,215,0,0.25);color:#FFD700">${today.length}</span> Ulang Tahun Hari Ini` : '🗓️ Tidak ada ulang tahun hari ini',
+    `📅 Minggu ini: <span class="ticker-badge">${week.length}</span> nasabah`,
+    `✨ Gentara Anugrah Birthday System`,
+    `<span class="ticker-badge">${total}</span> Total Nasabah`,
+    today.length ? `🎂 <span class="ticker-badge" style="background:rgba(255,215,0,0.25);color:#FFD700">${today.length}</span> Ulang Tahun Hari Ini` : '🗓️ Tidak ada ulang tahun hari ini',
+    `📅 Minggu ini: <span class="ticker-badge">${week.length}</span> nasabah`,
+    `✨ Gentara Anugrah Birthday System`,
+  ];
+  document.getElementById('ticker-track').innerHTML = items.map(i=>
+    `<span class="ticker-item"><span class="ticker-dot"></span>${i}</span>`
+  ).join('');
+}
+
+/* ══════════════════════════════════
+   BERANDA
+══════════════════════════════════ */
+function renderBeranda() {
+  refreshTicker();
+  const nasabah = appData.nasabah;
+  const todayBdays = nasabah.filter(n=>{ const p=parseNIK(n.nik); return p&&daysUntilBirthday(p.month,p.day)===0; });
+  const weekBdays = nasabah.filter(n=>{ const p=parseNIK(n.nik); if(!p)return false; const d=daysUntilBirthday(p.month,p.day); return d>0&&d<=7; });
+  const monthBdays = nasabah.filter(n=>{ const p=parseNIK(n.nik); if(!p)return false; const d=daysUntilBirthday(p.month,p.day); return d>0&&d<=30; });
+
+  // Stats
+  document.getElementById('stat-row').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${nasabah.length}</div><div class="stat-lbl">Total Nasabah</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--gold)">${todayBdays.length}</div><div class="stat-lbl">Hari Ini 🎂</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#3B82F6">${weekBdays.length}</div><div class="stat-lbl">Minggu Ini</div></div>
+  `;
+
+  // Hero
+  const heroEl = document.getElementById('hero-section');
+  if (todayBdays.length > 0) {
+    const main = todayBdays[0];
+    const p = parseNIK(main.nik);
+    heroEl.innerHTML = `
+      <div class="hero-birthday" style="margin:0 16px;">
+        <div class="hero-bg-circle c1"></div>
+        <div class="hero-bg-circle c2"></div>
+        <div class="hero-bg-circle c3"></div>
+        <div class="hero-tag">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Ulang Tahun Hari Ini!
+        </div>
+        ${todayBdays.length > 1 ? `<div class="hero-count-badge">+${todayBdays.length-1} lainnya</div>` : ''}
+        <div class="hero-name">${main.nama.toUpperCase()}</div>
+        <div class="hero-meta">
+          <span>${p.gender==='L'?'👨':'👩'} ${p.gender==='L'?'Laki-laki':'Perempuan'}</span>
+          <span style="opacity:.4">•</span>
+          <span>${p.age} Tahun</span>
+          <span style="opacity:.4">•</span>
+          <span>${formatDate(p.day,p.month,p.year)}</span>
+        </div>
+        <div class="hero-tagline">✦ Hari yang istimewa untuk nasabah setia kami ✦</div>
+      </div>`;
+    launchCelebration();
+    // More today
+    if (todayBdays.length > 1) {
+      document.getElementById('more-today-section').style.display = 'block';
+      document.getElementById('more-today-list').innerHTML = todayBdays.slice(1).map(n=>{
+        const pp=parseNIK(n.nik);
+        return `<div class="mini-bday-card">
+          <div style="font-size:20px;margin-bottom:4px">${pp.gender==='L'?'👨':'👩'}</div>
+          <div class="mini-bday-name">${n.nama}</div>
+          <div class="mini-bday-gender">${pp.gender==='L'?'Laki-laki':'Perempuan'} · ${pp.age} thn</div>
+        </div>`;
+      }).join('');
+    } else {
+      document.getElementById('more-today-section').style.display = 'none';
+    }
+  } else {
+    heroEl.innerHTML = `
+      <div class="hero-birthday" style="margin:0 16px;">
+        <div class="hero-bg-circle c1"></div>
+        <div class="hero-bg-circle c2"></div>
+        <div class="hero-bg-circle c3"></div>
+        <div class="hero-empty">
+          <div class="hero-empty-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2 1 2 1"/><line x1="2" y1="21" x2="22" y2="21"/><path d="M7 8v2"/><path d="M12 8v2"/><path d="M17 8v2"/><path d="M7 4l.5 4"/><path d="M12 4v4"/><path d="M17 4l-.5 4"/></svg>
+          </div>
+          <p>Tidak Ada Ulang Tahun Hari Ini</p>
+          <span>Nasabah berikutnya akan segera tiba 🎈</span>
+        </div>
+      </div>`;
+    document.getElementById('more-today-section').style.display='none';
+  }
+
+  // Quick stats — visual dashboard
+  const now = new Date();
+  const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const maleCount   = nasabah.filter(n=>{ const p=parseNIK(n.nik); return p&&p.gender==='L'; }).length;
+  const femaleCount = nasabah.filter(n=>{ const p=parseNIK(n.nik); return p&&p.gender==='P'; }).length;
+  const total = nasabah.length;
+
+  // Upcoming 6 months bar chart data
+  const barData = [];
+  for(let m=0;m<6;m++){
+    const d = new Date(now.getFullYear(), now.getMonth()+m, 1);
+    const mo = d.getMonth()+1; const yr = d.getFullYear();
+    const count = nasabah.filter(n=>{ const p=parseNIK(n.nik); return p&&p.month===mo; }).length;
+    barData.push({ label: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'][d.getMonth()], count, isCurrent: m===0 });
+  }
+  const barMax = Math.max(...barData.map(b=>b.count), 1);
+
+  // Gender donut SVG
+  const gPct = total > 0 ? Math.round((maleCount/total)*100) : 0;
+  const r = 30, circ = 2*Math.PI*r;
+  const maleDash = (maleCount/total)*circ || 0;
+
+  // Age distribution buckets
+  const ageBuckets = [
+    { label:'< 30', min:0, max:29, color:'#74B9FF' },
+    { label:'30–45', min:30, max:45, color:'#00D46E' },
+    { label:'46–60', min:46, max:60, color:'#FDCB6E' },
+    { label:'> 60', min:61, max:999, color:'#FD79A8' },
+  ];
+  ageBuckets.forEach(b=>{
+    b.count = nasabah.filter(n=>{ const p=parseNIK(n.nik); return p&&p.age>=b.min&&p.age<=b.max; }).length;
+  });
+  const ageMax = Math.max(...ageBuckets.map(b=>b.count),1);
+
+  document.getElementById('quick-stats-card').innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:14px;padding:2px 0;">
+
+    <!-- ── Row 1: Gender donut + Age bars side by side ── -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+      <!-- Gender donut -->
+      <div style="background:var(--green-mist);border-radius:var(--radius-sm);padding:14px 10px;text-align:center;transition:background 0.3s;" class="dash-inner-card">
+        <div style="font-size:10px;font-weight:700;font-family:'Inter';color:var(--text-muted-${darkMode?'dark':'light'});text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Jenis Kelamin</div>
+        <div style="position:relative;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px;">
+          <svg width="80" height="80" viewBox="0 0 80 80" style="transform:rotate(-90deg)">
+            <circle cx="40" cy="40" r="${r}" fill="none" stroke="${darkMode?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)'}" stroke-width="10"/>
+            <circle cx="40" cy="40" r="${r}" fill="none" stroke="#EC4899" stroke-width="10"
+              stroke-dasharray="${circ}" stroke-dashoffset="${maleDash}" stroke-linecap="round"
+              style="transition:stroke-dashoffset 1s ease"/>
+            <circle cx="40" cy="40" r="${r}" fill="none" stroke="#3B82F6" stroke-width="10"
+              stroke-dasharray="${maleDash} ${circ-maleDash}" stroke-dashoffset="0" stroke-linecap="round"
+              style="transition:stroke-dasharray 1s ease"/>
+          </svg>
+          <div style="position:absolute;text-align:center;">
+            <div style="font-family:'JetBrains Mono';font-size:15px;font-weight:700;color:var(--text-primary-${darkMode?'dark':'light'});line-height:1;">${total}</div>
+            <div style="font-size:9px;color:var(--text-muted-${darkMode?'dark':'light'});font-family:'Inter';">total</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;gap:10px;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div style="width:8px;height:8px;border-radius:2px;background:#3B82F6;flex-shrink:0;"></div>
+            <span style="font-size:10px;font-family:'Inter';color:var(--text-muted-${darkMode?'dark':'light'});">L&nbsp;<strong style="color:var(--text-primary-${darkMode?'dark':'light'})">${maleCount}</strong></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div style="width:8px;height:8px;border-radius:2px;background:#EC4899;flex-shrink:0;"></div>
+            <span style="font-size:10px;font-family:'Inter';color:var(--text-muted-${darkMode?'dark':'light'});">P&nbsp;<strong style="color:var(--text-primary-${darkMode?'dark':'light'})">${femaleCount}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Age distribution horizontal bars -->
+      <div style="background:var(--green-mist);border-radius:var(--radius-sm);padding:14px 12px;transition:background 0.3s;" class="dash-inner-card">
+        <div style="font-size:10px;font-weight:700;font-family:'Inter';color:var(--text-muted-${darkMode?'dark':'light'});text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Rentang Usia</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${ageBuckets.map(b=>`
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+              <span style="font-size:9.5px;font-family:'Inter';font-weight:600;color:var(--text-muted-${darkMode?'dark':'light'})">${b.label}</span>
+              <span style="font-size:10px;font-family:'JetBrains Mono';font-weight:700;color:${b.color}">${b.count}</span>
+            </div>
+            <div style="height:6px;border-radius:99px;background:${darkMode?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)'};">
+              <div style="height:100%;border-radius:99px;background:${b.color};width:${ageMax>0?Math.round((b.count/ageMax)*100):0}%;transition:width 0.8s cubic-bezier(0.34,1.1,0.64,1);box-shadow:0 0 6px ${b.color}55;"></div>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Row 2: 6-Month upcoming bar chart ── -->
+    <div style="background:var(--green-mist);border-radius:var(--radius-sm);padding:14px 12px;transition:background 0.3s;" class="dash-inner-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:10px;font-weight:700;font-family:'Inter';color:var(--text-muted-${darkMode?'dark':'light'});text-transform:uppercase;letter-spacing:0.6px;">Ulang Tahun 6 Bulan ke Depan</div>
+        <div style="font-size:10px;font-family:'Inter';color:var(--green-primary);font-weight:600;">${barData.reduce((a,b)=>a+b.count,0)} total</div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:64px;">
+        ${barData.map(b=>{
+          const h = barMax>0 ? Math.max(Math.round((b.count/barMax)*56),b.count>0?6:2) : 2;
+          return `
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;">
+            <div style="font-size:9px;font-family:'JetBrains Mono';font-weight:700;color:${b.isCurrent?'var(--green-primary)':b.count>0?'var(--text-muted-'+(!darkMode?'light':'dark')+')':'transparent'}">
+              ${b.count||''}
+            </div>
+            <div style="width:100%;border-radius:6px 6px 3px 3px;height:${h}px;
+              background:${b.isCurrent?'linear-gradient(180deg,var(--green-glow),var(--green-primary))':darkMode?'rgba(255,255,255,0.1)':'rgba(0,170,91,0.15)'};
+              transition:height 0.7s cubic-bezier(0.34,1.1,0.64,1);
+              box-shadow:${b.isCurrent&&b.count>0?'0 0 8px rgba(0,212,110,0.4)':'none'};
+              position:relative;overflow:hidden;">
+              ${b.isCurrent&&b.count>0?'<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0.15),transparent);border-radius:inherit;"></div>':''}
+            </div>
+            <div style="font-size:9px;font-family:'Inter';font-weight:${b.isCurrent?700:400};color:${b.isCurrent?'var(--green-primary)':'var(--text-muted-'+(!darkMode?'light':'dark')+')'}">${b.label}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- ── Row 3: Milestone upcoming birthdays ── -->
+    <div style="background:var(--green-mist);border-radius:var(--radius-sm);padding:14px 12px;transition:background 0.3s;" class="dash-inner-card">
+      <div style="font-size:10px;font-weight:700;font-family:'Inter';color:var(--text-muted-${darkMode?'dark':'light'});text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Ulang Tahun Terdekat Berikutnya</div>
+      ${(()=>{
+        const upcoming = nasabah.map(n=>{ const p=parseNIK(n.nik); if(!p)return null; const d=daysUntilBirthday(p.month,p.day); return {...n,...p,days:d}; })
+          .filter(Boolean).sort((a,b)=>a.days-b.days).slice(0,3);
+        if(!upcoming.length) return `<div style="text-align:center;font-size:12px;color:var(--text-muted-${darkMode?'dark':'light'});font-family:'Inter';padding:8px 0;">Belum ada data nasabah</div>`;
+        return upcoming.map((n,i)=>{
+          const pct = n.days===0 ? 100 : Math.max(5, 100-Math.round((n.days/365)*100));
+          const colors2 = ['var(--green-primary)','#3B82F6','#FDCB6E'];
+          return `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:${i<2?'10px':'0'};">
+            <div style="width:32px;height:32px;border-radius:10px;background:${n.gender==='L'?'linear-gradient(135deg,#3B82F6,#1D4ED8)':'linear-gradient(135deg,#EC4899,#BE185D)'};display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">${n.gender==='L'?'👨':'👩'}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-family:'Poppins';font-size:11.5px;font-weight:700;color:var(--text-primary-${darkMode?'dark':'light'});white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">${n.nama}</span>
+                <span style="font-family:'JetBrains Mono';font-size:11px;font-weight:700;color:${colors2[i]};flex-shrink:0;margin-left:6px;">${n.days===0?'Hari ini!':n.days+'h'}</span>
+              </div>
+              <div style="height:5px;border-radius:99px;background:${darkMode?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)'};">
+                <div style="height:100%;width:${pct}%;border-radius:99px;background:${colors2[i]};transition:width 1s ease;box-shadow:0 0 5px ${colors2[i]}55;"></div>
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+      })()}
+    </div>
+
+  </div>`;
+}
+
+/* ══════════════════════════════════
+   NASABAH
+══════════════════════════════════ */
+function renderNasabah() {
+  const q = (document.getElementById('search-input').value||'').toLowerCase();
+  document.getElementById('search-clear').style.display = q ? 'block' : 'none';
+  let list = appData.nasabah.filter(n =>
+    n.nama.toLowerCase().includes(q) || n.nik.includes(q)
+  );
+  list = list.sort((a,b)=>{
+    const pa=parseNIK(a.nik), pb=parseNIK(b.nik);
+    if(!pa)return 1; if(!pb)return -1;
+    return daysUntilBirthday(pa.month,pa.day)-daysUntilBirthday(pb.month,pb.day);
+  });
+  document.getElementById('nasabah-count-label').textContent = `${list.length} nasabah ditemukan`;
+  if (!list.length) {
+    document.getElementById('nasabah-list').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--green-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="empty-title">${q?'Nasabah tidak ditemukan':'Belum ada nasabah'}</div>
+        <div class="empty-sub">${q?'Coba kata kunci lain':'Tambah nasabah dengan tombol + di atas'}</div>
+      </div>`;
+    return;
+  }
+  document.getElementById('nasabah-list').innerHTML = list.map((n,i)=>{
+    const p = parseNIK(n.nik);
+    if (!p) return '';
+    const days = daysUntilBirthday(p.month, p.day);
+    let badge = '';
+    if (days===0) badge = `<span class="bday-badge badge-today">🎂 Hari Ini!</span>`;
+    else if (days<=7) badge = `<span class="bday-badge badge-week">📅 ${days} hari lagi</span>`;
+    else if (days<=30) badge = `<span class="bday-badge badge-month">🗓️ ${days} hari</span>`;
+    return `
+      <div class="nasabah-card" style="animation-delay:${i*0.04}s">
+        <div class="nasabah-avatar ${p.gender==='L'?'avatar-male':'avatar-female'}">${p.gender==='L'?'👨':'👩'}</div>
+        <div class="nasabah-info">
+          <div class="nasabah-name">${n.nama}</div>
+          <div class="nasabah-nik">${nikMask(n.nik)}</div>
+          <div class="nasabah-meta">
+            <span class="nasabah-date">📅 ${formatDate(p.day,p.month,p.year)} · ${p.age} thn</span>
+            ${badge}
+          </div>
+        </div>
+        <div class="nasabah-actions">
+          <button class="act-btn btn-edit" onclick="editNasabah('${n.id}')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="act-btn btn-del" onclick="deleteNasabah('${n.id}')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+}
+function clearSearch() {
+  document.getElementById('search-input').value='';
+  renderNasabah();
+}
+
+/* ══════════════════════════════════
+   TOP 10
+══════════════════════════════════ */
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderTop10();
+}
+function renderTop10() {
+  let list = appData.nasabah.map(n=>{ const p=parseNIK(n.nik); if(!p)return null; return {...n,...p,days:daysUntilBirthday(p.month,p.day)}; }).filter(Boolean);
+  if (currentFilter==='today') list=list.filter(n=>n.days===0);
+  else if (currentFilter==='week') list=list.filter(n=>n.days<=7);
+  else if (currentFilter==='month') list=list.filter(n=>n.days<=30);
+  else if (currentFilter==='male') list=list.filter(n=>n.gender==='L');
+  else if (currentFilter==='female') list=list.filter(n=>n.gender==='P');
+  list.sort((a,b)=>a.days-b.days);
+  const top = list.slice(0,10);
+  if (!top.length) {
+    document.getElementById('top10-list').innerHTML=`
+      <div class="empty-state">
+        <div class="empty-icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--green-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><line x1="2" y1="21" x2="22" y2="21"/></svg></div>
+        <div class="empty-title">Tidak ada data</div>
+        <div class="empty-sub">Tidak ada nasabah sesuai filter ini</div>
+      </div>`;
+    return;
+  }
+  const rankClass = i => i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
+  document.getElementById('top10-list').innerHTML = top.map((n,i)=>`
+    <div class="top10-card" style="animation-delay:${i*0.05}s">
+      <div class="rank-badge ${rankClass(i)}">${i+1}</div>
+      <div class="nasabah-avatar ${n.gender==='L'?'avatar-male':'avatar-female'}" style="width:40px;height:40px;border-radius:12px;font-size:18px;">${n.gender==='L'?'👨':'👩'}</div>
+      <div class="top10-info">
+        <div class="top10-name">${n.nama}</div>
+        <div class="top10-sub">${n.gender==='L'?'Laki-laki':'Perempuan'} · ${n.age} thn · ${formatDate(n.day,n.month,n.year)}</div>
+      </div>
+      <div class="countdown-wrap">
+        <div class="countdown-num ${n.days===0?'today':''}">${n.days===0?'🎂':n.days}</div>
+        <div class="countdown-unit">${n.days===0?'Hari ini':'hari lagi'}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════════
+   FORM MODAL
+══════════════════════════════════ */
+function openFormModal(id=null) {
+  editingId = id;
+  document.getElementById('form-title').textContent = id ? 'Edit Nasabah' : 'Tambah Nasabah';
+  if (id) {
+    const n = appData.nasabah.find(x=>x.id===id);
+    document.getElementById('f-nik').value = n.nik;
+    document.getElementById('f-nama').value = n.nama;
+    previewNIK();
+  } else {
+    document.getElementById('f-nik').value = '';
+    document.getElementById('f-nama').value = '';
+    document.getElementById('nik-preview').textContent = 'Masukkan NIK untuk melihat preview data';
+  }
+  document.getElementById('form-modal').classList.add('open');
+}
+function closeFormModal() { document.getElementById('form-modal').classList.remove('open'); }
+function previewNIK() {
+  const nik = document.getElementById('f-nik').value.trim();
+  const p = parseNIK(nik);
+  if (p) {
+    document.getElementById('nik-preview').innerHTML =
+      `✅ ${p.gender==='L'?'👨 Laki-laki':'👩 Perempuan'} &nbsp;•&nbsp; Lahir: ${formatDate(p.day,p.month,p.year)} &nbsp;•&nbsp; ${p.age} tahun`;
+  } else {
+    document.getElementById('nik-preview').textContent = nik.length===16 ? '❌ NIK tidak valid' : `${nik.length}/16 digit`;
+  }
+}
+function saveNasabah() {
+  const nik = document.getElementById('f-nik').value.trim();
+  const nama = document.getElementById('f-nama').value.trim();
+  if (!nik||!nama) { showToast('⚠️ Isi NIK dan Nama lengkap'); return; }
+  if (nik.length!==16) { showToast('⚠️ NIK harus 16 digit'); return; }
+  if (!parseNIK(nik)) { showToast('⚠️ NIK tidak valid'); return; }
+  const dupNIK = appData.nasabah.find(n=>n.nik===nik && n.id!==editingId);
+  if (dupNIK) { showToast('⚠️ NIK sudah terdaftar'); return; }
+  if (editingId) {
+    const idx = appData.nasabah.findIndex(n=>n.id===editingId);
+    appData.nasabah[idx] = {...appData.nasabah[idx], nik, nama};
+    showToast('✅ Data nasabah diperbarui');
+  } else {
+    appData.nasabah.push({ id: Date.now().toString(), nik, nama });
+    showToast('✅ Nasabah berhasil ditambahkan');
+  }
+  save();
+  closeFormModal();
+  renderNasabah();
+  refreshTicker();
+}
+function editNasabah(id) { openFormModal(id); }
+function deleteNasabah(id) {
+  const n = appData.nasabah.find(x=>x.id===id);
+  openConfirm(`Hapus ${n.nama}?`,'Data nasabah ini akan dihapus permanen.',()=>{
+    appData.nasabah = appData.nasabah.filter(x=>x.id!==id);
+    save(); renderNasabah(); refreshTicker();
+    showToast('🗑️ Nasabah dihapus');
+  });
+}
+function confirmDeleteAll() {
+  if (!appData.nasabah.length) { showToast('ℹ️ Tidak ada data untuk dihapus'); return; }
+  openConfirm('Hapus Semua Data?',`${appData.nasabah.length} nasabah akan dihapus permanen.`,()=>{
+    appData.nasabah=[];
+    save(); renderBeranda(); renderNasabah(); renderTop10(); refreshTicker();
+    showToast('🗑️ Semua data dihapus');
+  });
+}
+
+/* ══════════════════════════════════
+   CONFIRM MODAL
+══════════════════════════════════ */
+function openConfirm(title, text, cb, type='delete') {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-text').textContent = text;
+  confirmCallback = cb;
+  // Swap icon & button based on type
+  const iconWrap = document.getElementById('confirm-icon-wrap');
+  const okBtn = document.getElementById('confirm-ok-btn');
+  if (type === 'logout') {
+    iconWrap.innerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#3B82F6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`;
+    iconWrap.style.background = 'rgba(59,130,246,0.1)';
+    okBtn.textContent = 'Ya, Keluar';
+    okBtn.style.background = '#3B82F6';
+  } else {
+    iconWrap.innerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--danger)"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+    iconWrap.style.background = 'rgba(255,71,87,0.1)';
+    okBtn.textContent = 'Hapus';
+    okBtn.style.background = 'var(--danger)';
+  }
+  document.getElementById('confirm-modal').classList.add('open');
+  okBtn.onclick = ()=>{ closeConfirm(); if(confirmCallback) confirmCallback(); };
+}
+function closeConfirm() { document.getElementById('confirm-modal').classList.remove('open'); }
+
+/* ══════════════════════════════════
+   EXPORT / IMPORT
+══════════════════════════════════ */
+function exportJSON() {
+  if (!appData.nasabah.length) { showToast('ℹ️ Tidak ada data untuk diexport'); return; }
+  const blob = new Blob([JSON.stringify({
+    app:'Customer Birthday Assistant',
+    company:'Gentara Anugrah',
+    exported: new Date().toISOString(),
+    total: appData.nasabah.length,
+    nasabah: appData.nasabah
+  },null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`cba-export-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  showToast(`✅ ${appData.nasabah.length} nasabah berhasil diexport`);
+}
+function triggerImportJSON() {
+  const el = document.getElementById('import-file');
+  el.value = ''; // reset so same file can be re-imported
+  el.click();
+}
+function importJSON(e) {
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try {
+      const data=JSON.parse(ev.target.result);
+      const list=data.nasabah||data;
+      if(!Array.isArray(list)) throw new Error();
+      const valid=list.filter(n=>n.nik&&n.nama);
+      openConfirm(`Import ${valid.length} Nasabah?`,`Data yang sudah ada akan digabungkan.`,()=>{
+        const existing=new Set(appData.nasabah.map(n=>n.nik));
+        let added=0;
+        valid.forEach(n=>{
+          if(!existing.has(n.nik)){
+            appData.nasabah.push({id:Date.now().toString()+Math.random(),nik:n.nik,nama:n.nama});
+            added++;
+          }
+        });
+        save(); renderBeranda(); renderNasabah(); refreshTicker();
+        showToast(`✅ ${added} nasabah berhasil diimport`);
+      });
+    } catch { showToast('❌ File JSON tidak valid'); }
+    e.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+/* ══════════════════════════════════
+   DARK MODE
+══════════════════════════════════ */
+function toggleDark() {
+  darkMode=!darkMode;
+  document.body.classList.toggle('dark',darkMode);
+  localStorage.setItem('cba_dark',darkMode?'1':'0');
+  updateDarkUI();
+}
+function updateDarkUI() {
+  const tog=document.getElementById('dark-toggle');
+  if(tog) tog.classList.toggle('on',darkMode);
+}
+
+/* ══════════════════════════════════
+   TOAST
+══════════════════════════════════ */
+let toastTimer;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+/* ══════════════════════════════════
+   CONFETTI CELEBRATION
+══════════════════════════════════ */
+let celebrationActive = false;
+function launchCelebration() {
+  if (celebrationActive) return;
+  celebrationActive = true;
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.style.display = 'block';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const colors = ['#00AA5B','#00D46E','#FFD700','#FF6B6B','#FF9FF3','#4ECDC4','#A29BFE','#FD79A8','#FDCB6E','#74B9FF'];
+
+  // Confetti particles — more, varied shapes
+  const particles = [];
+  for (let i=0;i<180;i++) {
+    const shape = ['rect','circle','star','diamond'][Math.floor(Math.random()*4)];
+    particles.push({
+      x: Math.random()*canvas.width,
+      y: -20 - Math.random()*300,
+      w: 5+Math.random()*10,
+      h: 3+Math.random()*6,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      vx: (Math.random()-0.5)*4,
+      vy: 1.5+Math.random()*4,
+      rot: Math.random()*360,
+      rotV: (Math.random()-0.5)*10,
+      shape,
+      opacity: 1,
+      wobble: Math.random()*Math.PI*2,
+      wobbleSpeed: 0.05+Math.random()*0.05
+    });
+  }
+
+  // Firework bursts — more & multicolor
+  const bursts = [];
+  function addBurst(delay) {
+    setTimeout(()=>{
+      const bx = canvas.width*0.1 + Math.random()*canvas.width*0.8;
+      const by = canvas.height*0.05 + Math.random()*canvas.height*0.4;
+      const col = colors[Math.floor(Math.random()*colors.length)];
+      const count = 36 + Math.floor(Math.random()*20);
+      for(let i=0;i<count;i++) {
+        const angle = (i/count)*Math.PI*2;
+        const speed = 3+Math.random()*7;
+        bursts.push({ x:bx, y:by, vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed,
+          color:col, life:1, r:2+Math.random()*3, trail:[] });
+      }
+    }, delay);
+  }
+  addBurst(0); addBurst(300); addBurst(600); addBurst(950); addBurst(1300); addBurst(1700); addBurst(2200);
+
+  // Floating balloons
+  const balloons = [];
+  for(let i=0;i<8;i++) {
+    balloons.push({
+      x: canvas.width*0.05 + Math.random()*canvas.width*0.9,
+      y: canvas.height + 30 + Math.random()*80,
+      r: 16+Math.random()*14,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      vy: -(1.2+Math.random()*1.8),
+      vx: (Math.random()-0.5)*0.8,
+      wobble: Math.random()*Math.PI*2,
+      opacity: 0.9
+    });
+  }
+
+  // Shooting stars
+  const stars = [];
+  function addStar() {
+    stars.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height*0.5,
+      vx: 8+Math.random()*6,
+      vy: 2+Math.random()*3,
+      life: 1,
+      len: 40+Math.random()*60,
+      color: colors[Math.floor(Math.random()*colors.length)]
+    });
+  }
+  setTimeout(addStar,200); setTimeout(addStar,700); setTimeout(addStar,1100); setTimeout(addStar,1600);
+
+  function drawStar(cx,cy,r,color,alpha) {
+    ctx.save(); ctx.globalAlpha=alpha; ctx.fillStyle=color;
+    ctx.beginPath();
+    for(let i=0;i<5;i++) {
+      const a = (i/5)*Math.PI*2 - Math.PI/2;
+      const b = a + Math.PI/5;
+      if(i===0)ctx.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
+      else ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
+      ctx.lineTo(cx+Math.cos(b)*r*0.4,cy+Math.sin(b)*r*0.4);
+    }
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+
+  function drawDiamond(cx,cy,w,h,color,alpha,rot) {
+    ctx.save(); ctx.globalAlpha=alpha; ctx.fillStyle=color;
+    ctx.translate(cx,cy); ctx.rotate(rot);
+    ctx.beginPath();
+    ctx.moveTo(0,-h/2); ctx.lineTo(w/2,0); ctx.lineTo(0,h/2); ctx.lineTo(-w/2,0);
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+
+  let frame=0;
+  function animate() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // Confetti
+    particles.forEach(p=>{
+      p.wobble += p.wobbleSpeed;
+      p.x += p.vx + Math.sin(p.wobble)*0.8;
+      p.y += p.vy; p.rot += p.rotV; p.vy += 0.06;
+      if (p.y > canvas.height) { p.y=-10; p.opacity=Math.max(0,p.opacity-0.012); }
+      if (p.opacity <= 0) return;
+      const cx = p.x, cy = p.y;
+      if(p.shape==='circle') {
+        ctx.save(); ctx.globalAlpha=p.opacity; ctx.fillStyle=p.color;
+        ctx.beginPath(); ctx.arc(cx,cy,p.w/2,0,Math.PI*2); ctx.fill(); ctx.restore();
+      } else if(p.shape==='rect') {
+        ctx.save(); ctx.globalAlpha=p.opacity; ctx.fillStyle=p.color;
+        ctx.translate(cx,cy); ctx.rotate(p.rot*Math.PI/180);
+        ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+      } else if(p.shape==='star') {
+        drawStar(cx,cy,p.w/2,p.color,p.opacity);
+      } else {
+        drawDiamond(cx,cy,p.w,p.h,p.color,p.opacity,p.rot*Math.PI/180);
+      }
+    });
+
+    // Fireworks
+    bursts.forEach(b=>{
+      ctx.save(); ctx.globalAlpha=b.life*0.9; ctx.fillStyle=b.color;
+      ctx.shadowColor=b.color; ctx.shadowBlur=6;
+      ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+      b.x+=b.vx; b.y+=b.vy; b.vy+=0.12; b.vx*=0.97; b.life-=0.022;
+    });
+    for(let i=bursts.length-1;i>=0;i--) if(bursts[i].life<=0) bursts.splice(i,1);
+
+    // Balloons
+    balloons.forEach(b=>{
+      b.wobble = (b.wobble||0)+0.03;
+      b.x += b.vx + Math.sin(b.wobble)*0.5; b.y += b.vy;
+      if(b.opacity>0){
+        // Balloon body
+        ctx.save(); ctx.globalAlpha=b.opacity;
+        ctx.fillStyle=b.color;
+        ctx.shadowColor=b.color; ctx.shadowBlur=10;
+        ctx.beginPath();
+        ctx.ellipse(b.x,b.y,b.r,b.r*1.2,0,0,Math.PI*2);
+        ctx.fill();
+        // Highlight
+        ctx.fillStyle='rgba(255,255,255,0.3)';
+        ctx.beginPath();
+        ctx.ellipse(b.x-b.r*0.25,b.y-b.r*0.35,b.r*0.25,b.r*0.2,0,0,Math.PI*2);
+        ctx.fill();
+        // String
+        ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1;
+        ctx.beginPath();
+        ctx.moveTo(b.x,b.y+b.r*1.2);
+        ctx.quadraticCurveTo(b.x+8,b.y+b.r*1.2+20,b.x,b.y+b.r*1.2+40);
+        ctx.stroke();
+        ctx.restore();
+        if(b.y < -b.r*2) b.opacity=0;
+      }
+    });
+
+    // Shooting stars
+    stars.forEach(s=>{
+      ctx.save();
+      ctx.globalAlpha = s.life*0.8;
+      const grad = ctx.createLinearGradient(s.x,s.y,s.x-s.len,s.y-s.len/3);
+      grad.addColorStop(0,s.color); grad.addColorStop(1,'transparent');
+      ctx.strokeStyle=grad; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(s.x-s.len,s.y-s.len/3);
+      ctx.stroke(); ctx.restore();
+      s.x+=s.vx; s.y+=s.vy; s.life-=0.028;
+    });
+    for(let i=stars.length-1;i>=0;i--) if(stars[i].life<=0) stars.splice(i,1);
+
+    frame++;
+    if(frame < 380) requestAnimationFrame(animate);
+    else { ctx.clearRect(0,0,canvas.width,canvas.height); canvas.style.display='none'; celebrationActive=false; }
+  }
+  animate();
+}
+
+/* ══════════════════════════════════
+   REFRESH ALL
+══════════════════════════════════ */
+function refreshAll() {
+  renderBeranda();
+  renderNasabah();
+  renderTop10();
+  updateDarkUI();
+}
+
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
+load();
+// Close modals on overlay click
+document.getElementById('form-modal').addEventListener('click',function(e){if(e.target===this)closeFormModal();});
+document.getElementById('confirm-modal').addEventListener('click',function(e){if(e.target===this)closeConfirm();});
+document.getElementById('bulk-modal').addEventListener('click',function(e){if(e.target===this)closeBulkModal();});
+document.getElementById('reset-pin-modal').addEventListener('click',function(e){if(e.target===this)closeResetPinModal();});
+
+/* ══════════════════════════════════
+   BULK UPLOAD — CSV/EXCEL
+══════════════════════════════════ */
+let bulkStep = 1;
+let bulkRawRows = [];      // parsed rows from file
+let bulkValidated = [];    // {nama,nik,status,errors,parsed}
+let bulkValFilter = 'all'; // all | ok | err
+let bulkFileLoaded = false;
+
+function openBulkModal() {
+  bulkStep = 1; bulkRawRows = []; bulkValidated = []; bulkValFilter = 'all'; bulkFileLoaded = false;
+  document.getElementById('bulk-modal').classList.add('open');
+  renderBulkStep();
+}
+function closeBulkModal() {
+  document.getElementById('bulk-modal').classList.remove('open');
+  // Reset file input if any
+  const fi = document.getElementById('bulk-file-input');
+  if (fi) fi.value = '';
+}
+
+function setBulkStep(s) {
+  bulkStep = s;
+  const labels = ['Format','Upload','Validasi','Selesai'];
+  for (let i=1;i<=4;i++) {
+    const c = document.getElementById('step-c'+i);
+    const l = document.getElementById('step-l'+i);
+    if (!c) continue;
+    c.className = 'step-circle ' + (i < s ? 'done' : i === s ? 'active' : 'idle');
+    l.className = 'step-label' + (i === s ? ' active' : '');
+  }
+  for (let i=1;i<=3;i++) {
+    const ln = document.getElementById('step-line'+i);
+    if (ln) ln.className = 'step-line' + (i < s ? ' done' : '');
+  }
+  renderBulkStep();
+}
+
+function renderBulkStep() {
+  const body = document.getElementById('bulk-body');
+  const footer = document.getElementById('bulk-footer');
+  if (bulkStep === 1) {
+    body.innerHTML = `
+      <div style="padding-top:4px;">
+        <div class="format-card">
+          <div class="format-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            Format Kolom yang Dibutuhkan
+          </div>
+          <table class="format-table">
+            <thead><tr><th>Kolom</th><th>Nama Header</th><th>Contoh Isi</th></tr></thead>
+            <tbody>
+              <tr><td>A</td><td>NIK</td><td>3201011205800001</td></tr>
+              <tr><td>B</td><td>NAMA</td><td>BUDI SANTOSO</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="rule-list">
+          <div class="rule-item"><span class="rule-dot"></span><span>Baris pertama = header (NIK, NAMA) — akan dilewati otomatis</span></div>
+          <div class="rule-item"><span class="rule-dot"></span><span>NIK harus 16 digit angka, tidak boleh ada spasi atau strip</span></div>
+          <div class="rule-item"><span class="rule-dot"></span><span>Nama boleh huruf besar/kecil, minimal 2 karakter</span></div>
+          <div class="rule-item"><span class="rule-dot"></span><span>Format file: <strong>.csv</strong> atau <strong>.xlsx / .xls</strong></span></div>
+          <div class="rule-item"><span class="rule-dot"></span><span>NIK duplikat (sudah ada di sistem) akan ditandai error</span></div>
+          <div class="rule-item"><span class="rule-dot"></span><span>Semua baris harus valid — jika ada error, import dibatalkan</span></div>
+        </div>
+        <div class="format-title" style="font-size:12px;margin-bottom:8px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Unduh Template
+        </div>
+        <div class="dl-btns">
+          <button class="dl-btn" onclick="downloadTemplate('csv')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Template CSV
+          </button>
+          <button class="dl-btn filled" onclick="downloadTemplate('excel')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Template Excel (.xlsx)
+          </button>
+        </div>
+      </div>`;
+    footer.innerHTML = `
+      <button class="btn-primary" onclick="setBulkStep(2)" style="flex:1;">Lanjut — Pilih File</button>`;
+
+  } else if (bulkStep === 2) {
+    body.innerHTML = `
+      <div style="padding-top:4px;">
+        <div class="upload-zone ${bulkFileLoaded?'has-file':''}" id="upload-zone-el"
+          onclick="document.getElementById('bulk-file-input').click()"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleBulkDrop(event)">
+          <div class="upload-zone-icon">
+            ${bulkFileLoaded
+              ? `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green-primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+              : `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`}
+          </div>
+          <div class="upload-zone-title">${bulkFileLoaded ? 'File Terpilih ✓' : 'Tap untuk Pilih File'}</div>
+          <div class="upload-zone-sub">${bulkFileLoaded ? '' : 'atau drag & drop di sini'}</div>
+          ${bulkFileLoaded ? `<div class="upload-zone-file" id="bulk-filename-display"></div>` : `<div class="upload-zone-sub" style="margin-top:6px;">CSV · XLSX · XLS</div>`}
+        </div>
+        <input type="file" id="bulk-file-input" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleBulkFile(event)">
+        ${bulkFileLoaded && bulkRawRows.length ? `
+        <div style="background:rgba(0,170,91,0.07);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <div>
+            <div style="font-family:'Poppins';font-size:13px;font-weight:700;color:var(--green-primary)">${bulkRawRows.length} baris data terdeteksi</div>
+            <div style="font-size:11px;color:var(--text-muted-light);font-family:'Inter'">Siap untuk divalidasi</div>
+          </div>
+        </div>` : ''}
+      </div>`;
+    // restore filename
+    if (bulkFileLoaded) {
+      const d = document.getElementById('bulk-filename-display');
+      if (d) d.textContent = window._bulkFileName || '';
+    }
+    footer.innerHTML = `
+      <button class="btn-secondary" style="flex:0 0 80px;" onclick="setBulkStep(1)">← Kembali</button>
+      <button class="btn-primary" style="flex:1;" onclick="runValidation()" ${!bulkFileLoaded?'disabled style="opacity:0.5;pointer-events:none;"':''}>Validasi Data →</button>`;
+
+  } else if (bulkStep === 3) {
+    const total = bulkValidated.length;
+    const okCount = bulkValidated.filter(r=>r.status==='ok').length;
+    const errCount = total - okCount;
+    const filtered = bulkValFilter==='ok' ? bulkValidated.filter(r=>r.status==='ok')
+                   : bulkValFilter==='err' ? bulkValidated.filter(r=>r.status==='err')
+                   : bulkValidated;
+    body.innerHTML = `
+      <div style="padding-top:4px;">
+        <div class="val-summary">
+          <div class="val-sum-card vs-total"><div class="val-sum-num">${total}</div><div class="val-sum-lbl">TOTAL</div></div>
+          <div class="val-sum-card vs-ok"><div class="val-sum-num">${okCount}</div><div class="val-sum-lbl">VALID</div></div>
+          <div class="val-sum-card vs-err"><div class="val-sum-num">${errCount}</div><div class="val-sum-lbl">ERROR</div></div>
+        </div>
+        ${errCount > 0 ? `
+        <div style="background:rgba(255,71,87,0.07);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div style="font-size:12px;font-family:'Inter';color:var(--danger);line-height:1.5;">
+            <strong>${errCount} baris error</strong> ditemukan. Perbaiki file dan upload ulang agar import dapat diproses.
+          </div>
+        </div>` : `
+        <div style="background:rgba(0,170,91,0.07);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green-primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <div style="font-size:12px;font-family:'Inter';color:var(--green-primary);font-weight:600;">Semua data valid! Siap untuk diimport.</div>
+        </div>`}
+        <div class="val-filter-row">
+          <div class="val-chip ${bulkValFilter==='all'?'active':''}" onclick="setBulkValFilter('all')">Semua (${total})</div>
+          <div class="val-chip ${bulkValFilter==='ok'?'active':''}" onclick="setBulkValFilter('ok')">✓ Valid (${okCount})</div>
+          <div class="val-chip err-chip ${bulkValFilter==='err'?'active':''}" onclick="setBulkValFilter('err')">✕ Error (${errCount})</div>
+        </div>
+        <div class="val-list">
+          ${filtered.map((r,i)=>`
+          <div class="val-row ${r.status==='ok'?'row-ok':'row-err'}">
+            <div class="val-row-num">${r.rowNum}</div>
+            <div class="val-row-info">
+              <div class="val-row-name">${r.nama||'(nama kosong)'}</div>
+              <div class="val-row-nik">${r.nik||'(NIK kosong)'}</div>
+              ${r.status==='ok'
+                ? `<div class="val-row-parsed">${r.parsed.gender==='L'?'👨':'👩'} ${r.parsed.gender==='L'?'Laki-laki':'Perempuan'} · ${formatDate(r.parsed.day,r.parsed.month,r.parsed.year)} · ${r.parsed.age} thn</div>`
+                : `<div class="val-row-error">⚠ ${r.errors.join(' · ')}</div>`}
+            </div>
+            <div class="val-status ${r.status==='ok'?'ok':'err'}">
+              ${r.status==='ok'
+                ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+                : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`}
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    footer.innerHTML = `
+      <button class="btn-secondary" style="flex:0 0 80px;" onclick="setBulkStep(2)">← Upload Ulang</button>
+      <button class="btn-primary" style="flex:1;${errCount>0?'opacity:0.45;pointer-events:none;':''}" onclick="executeBulkImport()">
+        ${errCount>0?'Ada Error — Perbaiki File':'Import '+okCount+' Nasabah →'}
+      </button>`;
+
+  } else if (bulkStep === 4) {
+    const added = window._bulkAddedCount || 0;
+    const skipped = window._bulkSkippedCount || 0;
+    body.innerHTML = `
+      <div class="success-view">
+        <div class="success-anim">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="success-title">Import Berhasil!</div>
+        <div class="success-sub">Data nasabah telah berhasil ditambahkan ke sistem</div>
+        <div class="success-stats-row">
+          <div class="success-stat">
+            <div class="success-stat-num">${added}</div>
+            <div class="success-stat-lbl">Nasabah Ditambahkan</div>
+          </div>
+          <div class="success-stat">
+            <div class="success-stat-num blue">${skipped}</div>
+            <div class="success-stat-lbl">Dilewati (duplikat)</div>
+          </div>
+        </div>
+        <div style="width:100%;background:var(--green-mist);border-radius:var(--radius-md);padding:14px;text-align:center;">
+          <div style="font-family:'JetBrains Mono';font-size:32px;font-weight:700;color:var(--green-primary);">${appData.nasabah.length}</div>
+          <div style="font-size:12px;color:var(--text-muted-light);font-family:'Inter';margin-top:4px;">Total Nasabah di Sistem</div>
+        </div>
+      </div>`;
+    footer.innerHTML = `<button class="btn-primary" style="flex:1;" onclick="closeBulkModal();refreshAll();">Selesai</button>`;
+  }
+}
+
+function setBulkValFilter(f) {
+  bulkValFilter = f;
+  renderBulkStep();
+  // scroll val list into view
+  setTimeout(()=>{ document.querySelector('.val-filter-row')?.scrollIntoView({behavior:'smooth',block:'nearest'}); },50);
+}
+
+/* ── TEMPLATE DOWNLOAD ── */
+function downloadTemplate(type) {
+  const sample = [
+    ['NIK','NAMA'],
+    ['3201011205800001','BUDI SANTOSO'],
+    ['3271494508900002','SITI RAHAYU'],
+    ['3275010101950003','AHMAD FAUZI'],
+  ];
+  if (type === 'csv') {
+    const csv = sample.map(r=>r.join(',')).join('\n');
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='template-nasabah-cba.csv'; a.click();
+    showToast('✅ Template CSV diunduh');
+  } else {
+    // Build minimal XLSX without library using XML-based format
+    const xlsContent = buildXLS(sample);
+    const blob = new Blob([xlsContent],{type:'application/vnd.ms-excel'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='template-nasabah-cba.xls'; a.click();
+    showToast('✅ Template Excel diunduh');
+  }
+}
+
+function buildXLS(rows) {
+  let xml = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Worksheet ss:Name="Nasabah"><Table>`;
+  rows.forEach((row,ri)=>{
+    xml += '<Row>';
+    row.forEach((cell,ci)=>{
+      const type = (ri===0||ci===1)?'String':'String';
+      xml += `<Cell><Data ss:Type="${type}">${String(cell).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</Data></Cell>`;
+    });
+    xml += '</Row>';
+  });
+  xml += '</Table></Worksheet></Workbook>';
+  return xml;
+}
+
+/* ── FILE HANDLING ── */
+function handleBulkDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone-el').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processBulkFile(file);
+}
+function handleBulkFile(e) {
+  const file = e.target.files[0];
+  if (file) processBulkFile(file);
+}
+function processBulkFile(file) {
+  const name = file.name.toLowerCase();
+  window._bulkFileName = file.name;
+  if (name.endsWith('.csv')) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      bulkRawRows = parseCSV(ev.target.result);
+      bulkFileLoaded = true;
+      renderBulkStep();
+    };
+    reader.readAsText(file, 'UTF-8');
+  } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        bulkRawRows = parseXLSX(ev.target.result);
+        bulkFileLoaded = true;
+      } catch(err) {
+        showToast('❌ Gagal membaca file Excel');
+        bulkFileLoaded = false;
+      }
+      renderBulkStep();
+    };
+    reader.readAsBinaryString(file);
+  } else {
+    showToast('❌ Format file tidak didukung. Gunakan CSV atau XLSX.');
+  }
+}
+
+/* ── CSV PARSER ── */
+function parseCSV(text) {
+  const lines = text.replace(/\r/g,'').split('\n').filter(l=>l.trim());
+  if (!lines.length) return [];
+  // Skip header row
+  const start = (lines[0].toUpperCase().includes('NIK') || lines[0].toUpperCase().includes('NAMA')) ? 1 : 0;
+  return lines.slice(start).map(line => {
+    // Handle quoted CSV
+    const cols = [];
+    let cur='', inQ=false;
+    for (let ch of line+',') {
+      if (ch==='"') { inQ=!inQ; }
+      else if (ch===',' && !inQ) { cols.push(cur.trim()); cur=''; }
+      else cur+=ch;
+    }
+    const nik = (cols[0]||'').replace(/\s/g,'').replace(/-/g,'');
+    const nama = (cols[1]||'').trim();
+    return { nik, nama };
+  }).filter(r=>r.nik||r.nama);
+}
+
+/* ── XLSX PARSER (binary string → rows) ── */
+function parseXLSX(binaryStr) {
+  // Try to parse XML-based XLS first
+  if (binaryStr.includes('<?xml') || binaryStr.includes('<Workbook')) {
+    return parseXMLExcel(binaryStr);
+  }
+  // For real XLSX (zip), we need a different approach
+  // Use a simplified approach: look for shared strings and worksheet data
+  showToast('ℹ️ Gunakan format CSV atau XLS untuk kompatibilitas terbaik');
+  return [];
+}
+
+function parseXMLExcel(xml) {
+  const rows = [];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml,'text/xml');
+  const rowEls = doc.querySelectorAll('Row');
+  let start = 0;
+  rowEls.forEach((row,idx)=>{
+    const cells = [...row.querySelectorAll('Cell Data')].map(c=>c.textContent.trim());
+    if (idx===0 && (cells[0].toUpperCase().includes('NIK')||cells[0].toUpperCase().includes('NAMA'))) { start=1; return; }
+    if (idx<start) return;
+    const nik = (cells[0]||'').replace(/\s/g,'');
+    const nama = (cells[1]||'').trim();
+    if (nik||nama) rows.push({nik,nama});
+  });
+  return rows;
+}
+
+/* ── VALIDATION ── */
+function runValidation() {
+  if (!bulkRawRows.length) { showToast('⚠️ Tidak ada data untuk divalidasi'); return; }
+  const existingNIKs = new Set(appData.nasabah.map(n=>n.nik));
+  const seenNIKs = new Set();
+  bulkValidated = bulkRawRows.map((row, i) => {
+    const rowNum = i + 2; // +2 because row 1 = header
+    const errors = [];
+    const nik = (row.nik||'').replace(/\D/g,'');
+    const nama = (row.nama||'').trim();
+    if (!nik) errors.push('NIK kosong');
+    else if (nik.length !== 16) errors.push(`NIK ${nik.length} digit (harus 16)`);
+    else if (!parseNIK(nik)) errors.push('NIK tidak valid (tgl/bln tidak masuk akal)');
+    else if (existingNIKs.has(nik)) errors.push('NIK sudah terdaftar di sistem');
+    else if (seenNIKs.has(nik)) errors.push('NIK duplikat dalam file');
+    if (!nama) errors.push('Nama kosong');
+    else if (nama.length < 2) errors.push('Nama terlalu pendek');
+    if (nik && nik.length===16) seenNIKs.add(nik);
+    const parsed = errors.length===0 ? parseNIK(nik) : null;
+    return { rowNum, nik, nama, status: errors.length===0?'ok':'err', errors, parsed };
+  });
+  bulkValFilter = 'all';
+  setBulkStep(3);
+}
+
+/* ── EXECUTE IMPORT ── */
+function executeBulkImport() {
+  const valid = bulkValidated.filter(r=>r.status==='ok');
+  if (!valid.length) return;
+  const existingNIKs = new Set(appData.nasabah.map(n=>n.nik));
+  let added=0, skipped=0;
+  valid.forEach(r=>{
+    if (!existingNIKs.has(r.nik)) {
+      appData.nasabah.push({ id: Date.now().toString()+Math.random().toString(36).slice(2), nik:r.nik, nama:r.nama });
+      existingNIKs.add(r.nik);
+      added++;
+    } else skipped++;
+  });
+  save();
+  window._bulkAddedCount = added;
+  window._bulkSkippedCount = skipped;
+  setBulkStep(4);
+  launchCelebration();
+}
+
+// Keyboard support
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('pin-screen').classList.contains('active')) {
+    if(e.key>='0'&&e.key<='9') pinKey(e.key,null);
+    else if(e.key==='Backspace') pinDel();
+    else if(e.key==='Enter') pinSubmit();
+  }
+});
+</script>
+</body>
+</html>
